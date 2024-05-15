@@ -23,8 +23,18 @@ import { getIssuerContract } from "./utils/caches.ts";
 import { setupEnv } from "./utils/env.js";
 import dashboard from "./routes/dashboard.js";
 import exportRoutes from "./routes/export.js";
+import * as Sentry from '@sentry/node';
 
 setupEnv();
+
+const isDev = process.env.NODE_ENV == "development"
+
+Sentry.init({
+  dsn: process.env.SENTRY_DNS,
+  environment: process.env.NODE_ENV,
+  tracesSampleRate: isDev? 1.0 : 0.1,
+
+});
 
 const app = express();
 

@@ -25,6 +25,7 @@
         "export-manifest": "cd src/db/samples && zip -r notPoet.zip notPoet && mv notPoet.zip $HOME/Downloads"
     },
     "dependencies": {
+        "@sentry/node": "^8.0.0",
         "ajv": "^8.12.0",
         "ajv-formats": "^2.1.1",
         "axios": "^1.4.0",
