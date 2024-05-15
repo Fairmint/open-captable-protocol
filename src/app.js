@@ -33,7 +33,7 @@ Sentry.init({
   dsn: process.env.SENTRY_DNS,
   environment: process.env.NODE_ENV,
   tracesSampleRate: isDev? 1.0 : 0.1,
-
+  sendDefaultPii: true,
 });
 
 const app = express();
