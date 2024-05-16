@@ -30,7 +30,7 @@ setupEnv();
 const isDev = process.env.NODE_ENV == "development"
 
 Sentry.init({
-  dsn: process.env.SENTRY_DNS,
+  dsn: "https://9c398efc0837f0b1b93cc4d2f92bb710@o320781.ingest.us.sentry.io/4507266493775872",
   environment: process.env.NODE_ENV,
   tracesSampleRate: isDev? 1.0 : 0.1,
   sendDefaultPii: true,
