@@ -7,8 +7,8 @@
     "description": "Transfer Agent Protocol onchain cap table",
     "type": "module",
     "scripts": {
-        "prod": "npx tsx src/server.js --finalized-only",
-        "dev": "npx tsx watch src/server.js",
+        "prod": "NODE_ENV=production npx tsx src/server.js --finalized-only",
+        "dev": "NODE_ENV=development npx tsx watch src/server.js",
         "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache --fix",
         "lint": "yarn run eslint . --ext .js,.jsx,.ts,.tsx",
         "format": "prettier '**/*' --ignore-unknown --write",
