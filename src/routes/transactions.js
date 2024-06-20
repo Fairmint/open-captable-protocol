@@ -98,12 +98,6 @@ transactions.post("/issuance/stock-fairmint-reflection", async (req, res) => {
         incomingStockIssuance.custom_id = payload.custom_id;
         await validateInputAgainstOCF(incomingStockIssuance, stockIssuanceSchema);
 
-        // const stockExists = await readStockIssuanceByCustomId(payload.custom_id);
-
-        // if (stockExists._id) {
-        //     return res.status(409).send({ stockIssuance: stockExists });
-        // }
-
         await convertAndCreateIssuanceStockOnchain(contract, incomingStockIssuance);
 
         // new db object for fairmint data
