@@ -113,7 +113,7 @@ stakeholder.post("/create-fairmint-reflection", async (req, res) => {
         }
 
         console.log("series_name", payload.series_name);
-        console.log("issuer_assigned_id", payload.issuer_assigned_id);
+        // console.log("issuer_assigned_id", payload.issuer_assigned_id);
 
         // OCF doesn't allow extra fields in their validation
         const incomingStakeholderToValidate = {
@@ -131,10 +131,13 @@ stakeholder.post("/create-fairmint-reflection", async (req, res) => {
         await validateInputAgainstOCF(incomingStakeholderToValidate, stakeholderSchema);
 
         console.log(`Checking if Stakeholder id: ${data.issuer_assigned_id} exists`);
-        const existingStakeholder = await readStakeholderByIssuerAssignedId(data.issuer_assigned_id);
 
-        if (existingStakeholder && existingStakeholder._id) {
-            return res.status(200).send({ stakeholder: existingStakeholder });
+        const issuer_assigned_id = get(data, "issuer_assigned_id", "");
+        const existingStakeholder = await readStakeholderByIssuerAssignedId(issuer_assigned_id);
+
+        if (issuer_assigned_id.length > 0 && existingStakeholder && existingStakeholder._id) {
+            console.log("Found stakeholder ", existingStakeholder);
+            return res.status(409).send({ stakeholder: existingStakeholder });
         }
 
         await convertAndReflectStakeholderOnchain(contract, incomingStakeholderForDB);
