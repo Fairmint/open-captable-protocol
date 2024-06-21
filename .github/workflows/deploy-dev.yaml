@@ -32,7 +32,7 @@ jobs:
       - name: Build Docker image
         run: docker build --no-cache -t 009755999482.dkr.ecr.us-east-2.amazonaws.com/ocp:dev -f Dockerfile.dev .
 
-      - name: Authenticate with Ama`zon ECR
+      - name: Authenticate with Amazon ECR
         run: aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin 009755999482.dkr.ecr.us-east-2.amazonaws.com
 
       - name: Tag and push Docker image to Amazon ECR
