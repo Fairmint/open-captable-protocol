@@ -15,12 +15,24 @@ import {
     StockParamsQuantity,
     StockIssuanceParams
 } from "../lib/Structs.sol";
+import {
+    Tx
+} from "../lib/TransactionLib.sol";
 
 interface ICapTable {
     // @dev Transactions will be created on-chain then reflected off-chain.
     function transactions(uint256 index) external view returns (bytes memory);
 
+    function stakeholderIndex(bytes16 index) external view returns (uint256);
+
     function stockClassIndex(bytes16 index) external view returns (uint256);
+
+    function walletsPerStakeholder(address wallet) external view returns (bytes16);
+
+    // RBAC
+    function ADMIN_ROLE() external returns (bytes32);
+
+    function OPERATOR_ROLE() external returns (bytes32);
 
     /// @notice Initializer for the CapTable, sets access control and initializes issuer struct.
     function initialize(bytes16 id, uint256 initial_shares_authorized, address admin) external;
@@ -36,8 +48,15 @@ interface ICapTable {
 
     function seedSharesAuthorizedAndIssued(InitialShares calldata params) external;
 
-    function acceptStock(bytes16 stakeholderId, bytes16 stockClassId, bytes16 securityId, string[] memory comments)
-        external;
+    function createStakeholder(bytes16 _id, string memory _stakeholder_type, string memory _current_relationship) external;
+
+    function addWalletToStakeholder(bytes16 _stakeholder_id, address _wallet) external;
+
+    function removeWalletFromStakeholder(bytes16 _stakeholder_id, address _wallet) external;
+
+    function getStakeholderIdByWallet(address _wallet) external view returns (bytes16 stakeholderId);
+
+    function acceptStock(bytes16 stakeholderId, bytes16 stockClassId, bytes16 securityId, string[] memory comments) external;
 
     function adjustIssuerAuthorizedShares(
         uint256 newSharesAuthorized,
@@ -54,16 +73,15 @@ interface ICapTable {
         string memory stockholderApprovalDate
     ) external;
 
-    function createStockClass(
-        bytes16 _id,
-        string memory _class_type,
-        uint256 _price_per_share,
-        uint256 _initial_share_authorized
-    ) external;
+    function createStockClass(bytes16 _id, string memory _class_type, uint256 _price_per_share, uint256 _initial_share_authorized) external;
 
     function createStockLegendTemplate(bytes16 _id) external;
 
+    function getStakeholderById(bytes16 _id) external view returns (bytes16, string memory, string memory);
+
     function getStockClassById(bytes16 _id) external view returns (bytes16, string memory, uint256, uint256, uint256);
+
+    function getTotalNumberOfStakeholders() external view returns (uint256);
 
     function getTotalNumberOfStockClasses() external view returns (uint256);
 
@@ -72,17 +90,11 @@ interface ICapTable {
     function getTotalActiveSecuritiesCount() external view returns (uint256);
 
     // Function to get the timestamp of an active position
-    function getActivePosition(bytes16 stakeholderId, bytes16 securityId)
-        external
-        view
-        returns (bytes16, uint256, uint256, uint40);
+    function getActivePosition(bytes16 stakeholderId, bytes16 securityId) external view returns (bytes16, uint, uint, uint40);
 
     /// @notice Get the avg active position for the stakeholder by dividing the first return value (quantityPrice) by the second (quantity)
     ///  the timestamp is the time of the latest position
-    function getAveragePosition(bytes16 stakeholderId, bytes16 stockClassId)
-        external
-        view
-        returns (uint256, uint256, uint40);
+    function getAveragePosition(bytes16 stakeholderId, bytes16 stockClassId) external view returns (uint, uint, uint40);
 
     function issueStock(StockIssuanceParams calldata params) external;
 
@@ -103,4 +115,14 @@ interface ICapTable {
         uint256 quantity,
         uint256 share_price
     ) external;
+
+    function addAdmin(address addr) external;
+
+    function removeAdmin(address addr) external;
+
+    function addOperator(address addr) external;
+
+    function removeOperator(address addr) external;
+
+    function issuer() external view returns(bytes16, uint256, uint256);
 }
