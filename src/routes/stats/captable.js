@@ -453,6 +453,12 @@ const calculateCaptableStats = async (issuerId) => {
     console.log("total outstanding shares ", totalOutstandingShares)
     return {
         summary: {
+            isEmpty:
+                get(updatedCommonSummary, "rows", []).length === 0 &&
+                get(updatedPreferredSummary, "rows", []).length === 0 &&
+                get(updatedFounderPreferredSummary, "rows", []).length === 0 &&
+                get(updatedWarrantsAndNonPlanAwardsSummary, "rows", []).length === 0 &&
+                get(updatedStockPlansSummary, "rows", []).length === 0,
             common: updatedCommonSummary,
             preferred: updatedPreferredSummary,
             founderPreferred: updatedFounderPreferredSummary,
@@ -464,19 +470,17 @@ const calculateCaptableStats = async (issuerId) => {
                 totalFullyDilutedShares,
                 totalFullyPercentage: 1,
                 totalVotingPower,
-                totalVotingPowerPercentage: 1
-
-            }
+                totalVotingPowerPercentage: 1,
+            },
         },
         convertibles: {
+            isEmpty: Object.keys(convertiblesSummary).length === 0,
             convertiblesSummary,
             totals: {
-                outstandingAmount: totalOutstandingAmountConvertibles
-            }
-
-        }
-
-    }
+                outstandingAmount: totalOutstandingAmountConvertibles,
+            },
+        },
+    };
 };
 
 export default calculateCaptableStats;
