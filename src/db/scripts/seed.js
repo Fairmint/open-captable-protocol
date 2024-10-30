@@ -27,9 +27,11 @@ import txStockClassAuthorizedSharesAdjustmentSchema from "../../../ocf/schema/ob
 import txConvertibleIssuanceSchema from "../../../ocf/schema/objects/transactions/issuance/ConvertibleIssuance.schema.json" assert { type: "json" };
 import txEquityCompensationIssuanceSchema from "../../../ocf/schema/objects/transactions/issuance/EquityCompensationIssuance.schema.json" assert { type: "json" };
 import txWarrantIssuanceSchema from "../../../ocf/schema/objects/transactions/issuance/WarrantIssuance.schema.json" assert { type: "json" };
-
+import txIssuerAuthorizedSharesAdjustmentSchema from "../../../ocf/schema/objects/transactions/adjustment/IssuerAuthorizedSharesAdjustment.schema.json" assert { type: "json" };
+import txStockPlanPoolAdjustmentSchema from "../../../ocf/schema/objects/transactions/adjustment/StockPlanPoolAdjustment.schema.json" assert { type: "json" };
+import txEquityCompensationExerciseSchema from "../../../ocf/schema/objects/transactions/exercise/EquityCompensationExercise.schema.json" assert { type: "json" };
 import validateInputAgainstOCF from "../../utils/validateInputAgainstSchema.js";
-import preProcessManifestTxs from "../../state-machines/process.js";
+import preProcessManifestTxs from "../../state-machines/depth/process.js";
 
 async function processEntity(inputEntities, createEntityFunction, schema, issuerId) {
     console.log(`Adding ${createEntityFunction.name.replace("create", "")} to DB`);
@@ -85,6 +87,15 @@ export async function processTransactionEntity(txs) {
             case "TX_WARRANT_ISSUANCE":
                 schema = txWarrantIssuanceSchema;
                 break;
+            case "TX_ISSUER_AUTHORIZED_SHARES_ADJUSTMENT":
+                schema = txIssuerAuthorizedSharesAdjustmentSchema;
+                break;
+            case "TX_STOCK_PLAN_POOL_ADJUSTMENT":
+                schema = txStockPlanPoolAdjustmentSchema;
+                break;
+            case "TX_EQUITY_COMPENSATION_EXERCISE":
+                schema = txEquityCompensationExerciseSchema;
+                break;
             default:
                 throw new Error(`${tx.object_type} is not mapped - please add the transaction validation to the schema`);
         }
@@ -96,6 +107,7 @@ export async function processTransactionEntity(txs) {
             delete tx.series_name;
         }
 
+        console.log(`Validating Transaction id: ${tx.id}`);
         await validateInputAgainstOCF(tx, schema);
     }
 }

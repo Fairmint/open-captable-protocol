@@ -1,7 +1,7 @@
 import express, { json, urlencoded } from "express";
 import { setupEnv } from "./utils/env.js";
 import { connectDB } from "./db/config/mongoose.ts";
-import { startListener} from "./utils/websocket.ts";
+import { startListener } from "./utils/websocket.ts";
 
 // Routes
 import historicalTransactions from "./routes/historicalTransactions.js";
@@ -99,7 +99,7 @@ const startServer = async () => {
             console.log("Issuer -> Contract Address");
             const contractsToWatch = Object.values(contractAddresses)
             console.log("Watching ", contractsToWatch.length, " Contracts");
-            startListener(contractsToWatch);
+            // startListener(contractsToWatch);
         }
 
     });

@@ -2,7 +2,16 @@ import { API_URL } from "./config";
 import axios from "axios";
 import get from "lodash/get";
 
-export const reflectSeries = async ({ issuerId, series_id, series_name, stock_class_id, stock_plan_id, series_type, date, price_per_share = null }) => {
+export const reflectSeries = async ({
+    issuerId,
+    series_id,
+    series_name,
+    stock_class_id,
+    stock_plan_id,
+    series_type,
+    date,
+    price_per_share = null,
+}) => {
     console.log("Reflecting Series in fairmint...");
     console.log({ issuerId, series_id, series_name, stock_class_id, stock_plan_id, series_type, price_per_share, date });
 

@@ -13,6 +13,8 @@ import stockIssuanceSchema from "../../ocf/schema/objects/transactions/issuance/
 import stockReissuanceSchema from "../../ocf/schema/objects/transactions/reissuance/StockReissuance.schema.json" assert { type: "json" };
 import stockRepurchaseSchema from "../../ocf/schema/objects/transactions/repurchase/StockRepurchase.schema.json" assert { type: "json" };
 import stockRetractionSchema from "../../ocf/schema/objects/transactions/retraction/StockRetraction.schema.json" assert { type: "json" };
+import equityCompensationExerciseSchema from "../../ocf/schema/objects/transactions/exercise/EquityCompensationExercise.schema.json" assert { type: "json" };
+import stockPlanPoolAdjustmentSchema from "../../ocf/schema/objects/transactions/adjustment/StockPlanPoolAdjustment.schema.json" assert { type: "json" };
 
 import { convertAndAdjustIssuerAuthorizedSharesOnChain } from "../controllers/issuerController.js";
 import { convertAndAdjustStockClassAuthorizedSharesOnchain } from "../controllers/stockClassController.js";
@@ -23,15 +25,24 @@ import { convertAndCreateReissuanceStockOnchain } from "../controllers/transacti
 import { convertAndCreateRepurchaseStockOnchain } from "../controllers/transactions/repurchaseController.js";
 import { convertAndCreateRetractionStockOnchain } from "../controllers/transactions/retractionController.js";
 import { convertAndCreateTransferStockOnchain } from "../controllers/transactions/transferController.js";
-import { createConvertibleIssuance, createEquityCompensationIssuance, createWarrantIssuance } from "../db/operations/create.js";
+import {
+    createConvertibleIssuance,
+    createEquityCompensationIssuance,
+    createWarrantIssuance,
+    createEquityCompensationExercise,
+} from "../db/operations/create.js";
+import StockIssuance from "../db/objects/transactions/issuance/StockIssuance.js";
+import { reflectGrantExercise } from "../fairmint/reflectGrantExercise.js";
 
 import {
+    readStockPlanById,
     readConvertibleIssuanceById,
     readIssuerById,
     readStakeholderById,
     readStockClassById,
     readStockIssuanceByCustomId,
 } from "../db/operations/read.js";
+import { createStockPlanPoolAdjustment } from "../db/operations/create.js";
 import validateInputAgainstOCF from "../utils/validateInputAgainstSchema.js";
 import { getJoiErrorMessage } from "../chain-operations/utils.js";
 import { upsertFairmintDataBySeriesId } from "../db/operations/update.js";
@@ -73,7 +84,7 @@ transactions.post("/issuance/stock", async (req, res) => {
     }
 });
 
-transactions.post("/issuance/stock-fairmint-reflection", async (req, res) => {
+transactions.post("/issuance/Stock-fairmint-reflection", async (req, res) => {
     const { contract } = req;
     const { issuerId } = req.body;
 
@@ -111,6 +122,7 @@ transactions.post("/issuance/stock-fairmint-reflection", async (req, res) => {
         const stakeholder = await readStakeholderById(incomingStockIssuance.stakeholder_id);
         const stockClass = await readStockClassById(incomingStockIssuance.stock_class_id);
         incomingStockIssuance.comments = [
+            `old-security-id=${incomingStockIssuance.security_id}`,
             `fairmintData=${JSON.stringify({ series_id: payload.series_id, date: payload.data.date })}`,
             ...(incomingStockIssuance.comments || []),
         ];
@@ -384,6 +396,44 @@ transactions.post("/adjust/stock-class/authorized-shares", async (req, res) => {
     }
 });
 
+transactions.post("/adjust/stock-plan-pool", async (req, res) => {
+    // const { contract } = req;
+    const { data, issuerId } = req.body;
+
+    try {
+        await readIssuerById(issuerId);
+        const stockPlanPoolAdjustment = {
+            id: uuid(), // placeholder
+            date: new Date().toISOString().slice(0, 10),
+            object_type: "TX_STOCK_PLAN_POOL_ADJUSTMENT",
+            ...data,
+        };
+
+        console.log("stockPlanPoolAdjustment", stockPlanPoolAdjustment);
+
+        // NOTE: schema validation does not include stakeholder, stockClassId, however these properties are needed on to be passed on chain
+        await validateInputAgainstOCF(stockPlanPoolAdjustment, stockPlanPoolAdjustmentSchema);
+
+        const stockPlan = await readStockPlanById(stockPlanPoolAdjustment.stock_plan_id);
+
+        if (!stockPlan || !stockPlan._id) {
+            return res.status(404).send({ error: "Stock plan not found on OCP" });
+        }
+
+        // TODO: implement Chain OP
+
+        await createStockPlanPoolAdjustment({
+            ...stockPlanPoolAdjustment,
+            issuer: issuerId,
+        });
+
+        res.status(200).send({ stockPlanAdjustment: stockPlanPoolAdjustment });
+    } catch (error) {
+        console.error(`error: ${error.stack}`);
+        res.status(500).send(`${error}`);
+    }
+});
+
 transactions.post("/issuance/equity-compensation", async (req, res) => {
     const { issuerId, data } = req.body;
 
@@ -434,7 +484,7 @@ transactions.post("/issuance/equity-compensation-fairmint-reflection", async (re
         const incomingEquityCompensationIssuance = {
             id: uuid(), // for OCF Validation
             security_id: uuid(), // for OCF Validation,
-            date: new Date().toISOString().slice(0, 10), // for OCF Validation
+            date: new Date().toISOString().slice(0, 10), // for OCF Validation, it gets overriden if date exists in data
             object_type: "TX_EQUITY_COMPENSATION_ISSUANCE",
             ...data,
         };
@@ -463,6 +513,8 @@ transactions.post("/issuance/equity-compensation-fairmint-reflection", async (re
             issuerId,
             series_id: payload.series_id,
             series_name: payload.series_name,
+            stock_class_id: get(incomingEquityCompensationIssuance, "stock_class_id"),
+            stock_plan_id: get(incomingEquityCompensationIssuance, "stock_plan_id"),
             series_type: SERIES_TYPE.GRANT,
             date: get(incomingEquityCompensationIssuance, "date", new Date().toISOString().split("T")[0]),
         });
@@ -474,15 +526,74 @@ transactions.post("/issuance/equity-compensation-fairmint-reflection", async (re
             issuerId,
             stakeholder_id: stakeholder._id,
             series_id: payload.series_id,
-            token_amount: get(incomingEquityCompensationIssuance, "quantity", "0"),
+            quantity: get(incomingEquityCompensationIssuance, "quantity", "0"),
             exercise_price: get(incomingEquityCompensationIssuance, "exercise_price.amount", "0"),
             compensation_type: get(incomingEquityCompensationIssuance, "compensation_type", ""),
+            option_grant_type: get(incomingEquityCompensationIssuance, "option_grant_type", ""),
+            security_law_exemptions: get(incomingEquityCompensationIssuance, "security_law_exemptions", []),
+            expiration_date: get(incomingEquityCompensationIssuance, "expiration_date", null),
+            termination_exercise_windows: get(incomingEquityCompensationIssuance, "termination_exercise_windows", []),
+            vestings: get(incomingEquityCompensationIssuance, "vestings", []),
+            expiration_date: get(incomingEquityCompensationIssuance, "expiration_date", null),
             date: get(incomingEquityCompensationIssuance, "date", new Date().toISOString().split("T")[0]),
+            vesting_terms_id: get(incomingEquityCompensationIssuance, "vesting_terms_id", null),
         });
 
         console.log("Reflected Grant Response:", reflectGrantResponse);
 
         res.status(200).send({ equityCompensationIssuance: createdIssuance });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send(`${error}`);
+    }
+});
+
+transactions.post("/exercise/equity-compensation-fairmint-reflection", async (req, res) => {
+    const { data, issuerId } = req.body; // issuer id is checked in the middleware
+
+    try {
+        const incomingEquityCompensationExercise = {
+            id: uuid(), // for OCF Validation, it gets overriden if id exists in data
+            security_id: uuid(), // for OCF Validation, it gets overriden if security_id exists in data
+            date: new Date().toISOString().slice(0, 10), // for OCF Validation, it gets overriden if date exists in data
+            object_type: "TX_EQUITY_COMPENSATION_EXERCISE",
+            ...data,
+        };
+
+        await validateInputAgainstOCF(incomingEquityCompensationExercise, equityCompensationExerciseSchema);
+        // Query DB for existing exercise with old security_id on StockIssuance
+        const oldSecurityIds = get(incomingEquityCompensationExercise, "resulting_security_ids", []);
+        const newSecurityIds = [];
+
+        for (const oldSecurityId of oldSecurityIds) {
+            console.log(`Checking DB for old-security-id=${oldSecurityId}`);
+            const stockIssuance = await StockIssuance.findOne({ comments: `old-security-id=${oldSecurityId}` });
+            if (!stockIssuance) {
+                return res.status(404).send({ error: `Stock Issuance not found on OCP for old-security-id=${oldSecurityId}` });
+            }
+            newSecurityIds.push(stockIssuance.security_id);
+        }
+
+        // replace old security_ids with new security_ids
+        incomingEquityCompensationExercise.resulting_security_ids = newSecurityIds;
+
+        const createdExercise = await createEquityCompensationExercise({
+            ...incomingEquityCompensationExercise,
+            issuer: issuerId,
+        });
+
+        // Reflect exercise on fairmint
+        const reflectedExercise = await reflectGrantExercise({
+            security_id: incomingEquityCompensationExercise.security_id,
+            resulting_security_ids: incomingEquityCompensationExercise.resulting_security_ids,
+            issuerId,
+            quantity: incomingEquityCompensationExercise.quantity,
+            date: incomingEquityCompensationExercise.date,
+        });
+
+        console.log("Reflected Exercise Response:", reflectedExercise);
+
+        res.status(200).send({ equityCompensationExercise: createdExercise });
     } catch (error) {
         console.error(error);
         res.status(500).send(`${error}`);

@@ -12,6 +12,10 @@ import ConvertibleIssuance from "../objects/transactions/issuance/ConvertibleIss
 import StockIssuance from "../objects/transactions/issuance/StockIssuance.js";
 import StockTransfer from "../objects/transactions/transfer/StockTransfer.js";
 import EquityCompensationIssuance from "../objects/transactions/issuance/EquityCompensationIssuance.js";
+import IssuerAuthorizedSharesAdjustment from "../objects/transactions/adjustment/IssuerAuthorizedSharesAdjustment.js";
+import StockClassAuthorizedSharesAdjustment from "../objects/transactions/adjustment/StockClassAuthorizedSharesAdjustment.js";
+import StockPlanPoolAdjustment from "../objects/transactions/adjustment/StockPlanPoolAdjustment.js";
+import EquityCompensationExercise from "../objects/transactions/exercise/EquityCompensationExercise.js";
 import { countDocuments, find, findById, findOne } from "./atomic.ts";
 
 // READ By ID
@@ -127,6 +131,59 @@ export const readFairmintDataBySeriesId = async (series_id) => {
     return await Fairmint.findOne({ series_id });
 };
 
+
+export const getAllStateMachineObjectsById = async (issuerId) => {
+    const issuer = await readIssuerById(issuerId);
+    const stockClasses = await find(StockClass, { issuer: issuerId });
+    const stockPlans = await find(StockPlan, { issuer: issuerId });
+
+    // Get all transaction types
+    const issuerAuthorizedSharesAdjustments = await find(IssuerAuthorizedSharesAdjustment, { issuer: issuerId });
+    const stockClassAuthorizedSharesAdjustments = await find(StockClassAuthorizedSharesAdjustment, { issuer: issuerId });
+    const stockPlanPoolAdjustment = await find(StockPlanPoolAdjustment, { issuer: issuerId });
+    const stockIssuances = await find(StockIssuance, { issuer: issuerId });
+    const equityCompensationIssuances = await find(EquityCompensationIssuance, { issuer: issuerId });
+    const equityCompensationExercises = await find(EquityCompensationExercise, { issuer: issuerId });
+
+
+    // const convertibleIssuances = await find(ConvertibleIssuance, { issuer: issuerId });
+
+
+    // Combine all transactions into one array
+    const allTransactions = [
+        ...issuerAuthorizedSharesAdjustments,
+        ...stockClassAuthorizedSharesAdjustments,
+        ...stockPlanPoolAdjustment,
+        ...stockIssuances,
+        ...equityCompensationIssuances,
+        ...equityCompensationExercises
+        // ...convertibleIssuances,
+    ].sort((a, b) => {
+        // First sort by transaction type to ensure adjustments happen first
+        const typeOrder = {
+            'TX_ISSUER_AUTHORIZED_SHARES_ADJUSTMENT': 0,
+            'TX_STOCK_CLASS_AUTHORIZED_SHARES_ADJUSTMENT': 1,
+            'TX_STOCK_PLAN_POOL_ADJUSTMENT': 2,
+            'TX_STOCK_ISSUANCE': 3,
+            'TX_EQUITY_COMPENSATION_ISSUANCE': 4
+        };
+        const typeCompare = typeOrder[a.object_type] - typeOrder[b.object_type];
+
+        // If same type, sort by createdAt
+        return typeCompare !== 0 ? typeCompare : new Date(a.createdAt) - new Date(b.createdAt);
+    });
+
+    console.log("allTransactions", allTransactions);
+
+    console.log("stock plan adjustments", stockPlanPoolAdjustment);
+
+    return {
+        issuer,
+        stockClasses,
+        stockPlans,
+        transactions: allTransactions
+    };
+};
 
 export async function sumEquityCompensationIssuances(issuerId, stockPlanId) {
     try {
