@@ -136,6 +136,7 @@ export const getAllStateMachineObjectsById = async (issuerId) => {
     const issuer = await readIssuerById(issuerId);
     const stockClasses = await find(StockClass, { issuer: issuerId });
     const stockPlans = await find(StockPlan, { issuer: issuerId });
+    const stakeholders = await find(Stakeholder, { issuer: issuerId });
 
     // Get all transaction types
     const issuerAuthorizedSharesAdjustments = await find(IssuerAuthorizedSharesAdjustment, { issuer: issuerId });
@@ -144,9 +145,7 @@ export const getAllStateMachineObjectsById = async (issuerId) => {
     const stockIssuances = await find(StockIssuance, { issuer: issuerId });
     const equityCompensationIssuances = await find(EquityCompensationIssuance, { issuer: issuerId });
     const equityCompensationExercises = await find(EquityCompensationExercise, { issuer: issuerId });
-
-
-    // const convertibleIssuances = await find(ConvertibleIssuance, { issuer: issuerId });
+    const convertibleIssuances = await find(ConvertibleIssuance, { issuer: issuerId });
 
 
     // Combine all transactions into one array
@@ -156,8 +155,8 @@ export const getAllStateMachineObjectsById = async (issuerId) => {
         ...stockPlanPoolAdjustment,
         ...stockIssuances,
         ...equityCompensationIssuances,
-        ...equityCompensationExercises
-        // ...convertibleIssuances,
+        ...equityCompensationExercises,
+        ...convertibleIssuances,
     ].sort((a, b) => {
         // First sort by transaction type to ensure adjustments happen first
         const typeOrder = {
@@ -165,7 +164,8 @@ export const getAllStateMachineObjectsById = async (issuerId) => {
             'TX_STOCK_CLASS_AUTHORIZED_SHARES_ADJUSTMENT': 1,
             'TX_STOCK_PLAN_POOL_ADJUSTMENT': 2,
             'TX_STOCK_ISSUANCE': 3,
-            'TX_EQUITY_COMPENSATION_ISSUANCE': 4
+            'TX_EQUITY_COMPENSATION_ISSUANCE': 3,
+            'TX_CONVERTIBLE_ISSUANCE': 3
         };
         const typeCompare = typeOrder[a.object_type] - typeOrder[b.object_type];
 
@@ -181,6 +181,7 @@ export const getAllStateMachineObjectsById = async (issuerId) => {
         issuer,
         stockClasses,
         stockPlans,
+        stakeholders,
         transactions: allTransactions
     };
 };

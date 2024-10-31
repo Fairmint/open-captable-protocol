@@ -2,7 +2,6 @@ import { Router } from "express";
 import calculateDashboardStats from "./dashboard.js";
 import { readIssuerById } from "../../db/operations/read.js";
 import calculateCaptableStats from "./captable.js";
-import { testStockIssuance } from "../../state-machines/breadth/test.js";
 import { rxjs } from "../../rxjs/index.js";
 
 const stats = Router();
@@ -18,17 +17,6 @@ stats.get("/dashboard", async (req, res) => {
     const dashboardData = await calculateDashboardStats(issuerId);
 
     res.status(200).send(dashboardData);
-});
-
-stats.get("/state-machine", async (req, res) => {
-    const { issuerId } = req.query;
-    console.log("issuerId", issuerId);
-
-    const stockIssuanceData = await testStockIssuance(issuerId);
-
-    console.log("stockIssuanceData", stockIssuanceData)
-
-    res.status(200).send(stockIssuanceData);
 });
 
 stats.get("/rxjs", async (req, res) => {

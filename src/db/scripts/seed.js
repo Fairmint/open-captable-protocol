@@ -31,7 +31,7 @@ import txIssuerAuthorizedSharesAdjustmentSchema from "../../../ocf/schema/object
 import txStockPlanPoolAdjustmentSchema from "../../../ocf/schema/objects/transactions/adjustment/StockPlanPoolAdjustment.schema.json" assert { type: "json" };
 import txEquityCompensationExerciseSchema from "../../../ocf/schema/objects/transactions/exercise/EquityCompensationExercise.schema.json" assert { type: "json" };
 import validateInputAgainstOCF from "../../utils/validateInputAgainstSchema.js";
-import preProcessManifestTxs from "../../state-machines/depth/process.js";
+import preProcessManifestTxs from "../../state-machines/process.js";
 
 async function processEntity(inputEntities, createEntityFunction, schema, issuerId) {
     console.log(`Adding ${createEntityFunction.name.replace("create", "")} to DB`);
