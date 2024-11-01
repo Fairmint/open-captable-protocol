@@ -2,7 +2,7 @@ import { Router } from "express";
 import calculateDashboardStats from "./dashboard.js";
 import { readIssuerById } from "../../db/operations/read.js";
 import calculateCaptableStats from "./captable.js";
-import { rxjs } from "../../rxjs/index.js";
+import { dashboardStats, captableStats } from "../../rxjs/index.js";
 
 const stats = Router();
 
@@ -19,16 +19,28 @@ stats.get("/dashboard", async (req, res) => {
     res.status(200).send(dashboardData);
 });
 
-stats.get("/rxjs", async (req, res) => {
+stats.get("/rxjs/dashboard", async (req, res) => {
     const { issuerId } = req.query;
     console.log("issuerId", issuerId);
 
-    const rxjsData = await rxjs(issuerId);
+    const rxjsData = await dashboardStats(issuerId);
 
     console.log("rxjsData", rxjsData)
 
     res.status(200).send(rxjsData);
 });
+
+stats.get("/rxjs/captable", async (req, res) => {
+    const { issuerId } = req.query;
+    console.log("issuerId", issuerId);
+
+    const rxjsData = await captableStats(issuerId);
+
+    console.log("rxjsData", rxjsData)
+
+    res.status(200).send(rxjsData);
+});
+
 
 stats.get("/captable", async (req, res) => {
     const { issuerId } = req.query;

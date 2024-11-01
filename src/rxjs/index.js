@@ -1,66 +1,39 @@
 import { from, lastValueFrom } from 'rxjs';
 import { scan, tap, last, map } from 'rxjs/operators';
 import { getAllStateMachineObjectsById } from "../db/operations/read.js";
+import { dashboardInitialState, processDashboardConvertibleIssuance, processDashboardEquityCompensationExercise, processDashboardStockIssuance } from "./dashboard.js";
+import { captableInitialState, processCaptableStockIssuance, processCaptableEquityCompensationIssuance } from './captable.js';
 
 // Initial state structure
-const createInitialState = (issuer, stockClasses, stockPlans, stakeholders) => ({
-    issuer: {
-        id: issuer._id,
-        sharesAuthorized: parseInt(issuer.initial_shares_authorized),
-        sharesIssued: 0
-    },
-    stockClasses: stockClasses.reduce((acc, sc) => ({
-        ...acc,
-        [sc._id]: {
-            id: sc._id,
-            sharesAuthorized: parseInt(sc.initial_shares_authorized),
-            sharesIssued: 0
-        }
-    }), {}),
-    stockPlans: {
-        'no-stock-plan': {
-            id: 'no-stock-plan',
-            sharesReserved: 0,
-            sharesIssued: 0,
-            name: 'Unassigned Stock Plan'
-        },
-        ...stockPlans.reduce((acc, sp) => ({
-            ...acc,
-            [sp._id]: {
-                id: sp._id,
-                sharesReserved: parseInt(sp.initial_shares_reserved),
-                sharesIssued: 0,
-                stockClassIds: sp.stock_class_ids,
-                name: sp.plan_name
-            }
-        }), {})
-    },
-    equityCompensation: {
-        exercises: {},
-    },
-    sharesIssuedByCurrentRelationship: {},
-    errors: [],
-    positions: [],
-    transactions: [],
-    numOfStakeholders: stakeholders.length,
-    totalRaised: 0,
-    latestSharePrice: 0,
-    valuations: {
-        stock: null,  // { amount, createdAt, type: 'STOCK' }
-        convertible: null,  // { amount, createdAt, type: 'CONVERTIBLE' }
-    },
-});
+const createInitialState = (issuer, stockClasses, stockPlans, stakeholders) => {
+    // First create the dashboard state
+    const dashboardState = dashboardInitialState(issuer, stockClasses, stockPlans, stakeholders);
+
+    // Create captable state
+    const captableState = captableInitialState(issuer, stockClasses, stockPlans, stakeholders);
+
+    return {
+        ...dashboardState,
+        ...captableState,  // Add captable specific state
+        transactions: [],  // Reset transactions array
+        errors: []  // Reset errors array
+    };
+};
 
 // Process transactions
-const processTransaction = (state, transaction, stakeholders) => {
+const processTransaction = (state, transaction, stakeholders, stockClasses) => {
     const newState = {
         ...state,
         transactions: [...state.transactions, transaction]
     };
 
+    const stakeholder = stakeholders.find(s => s.id === transaction.stakeholder_id);
+    const stockClass = stockClasses.find(sc => sc._id === transaction.stock_class_id);
+
+
     switch (transaction.object_type) {
         case 'TX_STOCK_ISSUANCE':
-            return processStockIssuance(newState, transaction, stakeholders);
+            return processStockIssuance(newState, transaction, stakeholder, stockClass);
         case 'TX_ISSUER_AUTHORIZED_SHARES_ADJUSTMENT':
             return processIssuerAdjustment(newState, transaction);
         case 'TX_STOCK_CLASS_AUTHORIZED_SHARES_ADJUSTMENT':
@@ -72,127 +45,55 @@ const processTransaction = (state, transaction, stakeholders) => {
         case 'TX_EQUITY_COMPENSATION_EXERCISE':
             return processEquityCompensationExercise(newState, transaction);
         case 'TX_CONVERTIBLE_ISSUANCE':
-            return processConvertibleIssuance(newState, transaction, stakeholders);
+            return processConvertibleIssuance(newState, transaction, stakeholder);
         default:
             return state;
     }
 };
 
 // Process convertible issuance
-const processConvertibleIssuance = (state, transaction, stakeholders) => {
-    const { investment_amount, stakeholder_id } = transaction;
-    const stakeholder = stakeholders.find(s => s.id === stakeholder_id);
+const processConvertibleIssuance = (state, transaction, stakeholder) => {
 
-    // Only count towards totalRaised if not FOUNDER or BOARD_MEMBER
-    const shouldCountTowardsRaised = stakeholder &&
-        !['FOUNDER', 'BOARD_MEMBER'].includes(stakeholder.current_relationship);
-    const amountToAdd = shouldCountTowardsRaised ? Number(investment_amount.amount) : 0;
 
-    const conversionTriggers = transaction.conversion_triggers || [];
-    let conversionValuationCap = null;
-
-    // Look for SAFE conversion with valuation cap
-    conversionTriggers.forEach(trigger => {
-        if (trigger.conversion_right?.type === "CONVERTIBLE_CONVERSION_RIGHT" &&
-            trigger.conversion_right?.conversion_mechanism?.type === "SAFE_CONVERSION") {
-            conversionValuationCap = trigger.conversion_right.conversion_mechanism.conversion_valuation_cap?.amount;
-        }
-    });
-
-    // Only update if we found a valuation cap
-    const newValuation = conversionValuationCap ? {
-        type: 'CONVERTIBLE',
-        amount: Number(conversionValuationCap),
-        createdAt: transaction.createdAt
-    } : state.valuations.convertible;
+    const dashboardState = processDashboardConvertibleIssuance(state, transaction, stakeholder);
 
     return {
-        ...state,
-        totalRaised: state.totalRaised + amountToAdd,
-        sharesIssuedByCurrentRelationship: {
-            ...state.sharesIssuedByCurrentRelationship,
-            [stakeholder.current_relationship]: (state.sharesIssuedByCurrentRelationship[stakeholder.current_relationship] || 0)
-        },
-        valuations: {
-            ...state.valuations,
-            convertible: newValuation
-        }
-    };
+        ...dashboardState
+    }
+
 };
 
 // Process stock issuance
-const processStockIssuance = (state, transaction, stakeholders) => {
-    const { stock_class_id, stakeholder_id, share_price, quantity } = transaction;
-    const stakeholder = stakeholders.find(s => s.id === stakeholder_id);
-    const numShares = parseInt(quantity);
-    const stockClass = state.stockClasses[stock_class_id];
+const processStockIssuance = (state, transaction, stakeholder, stockClass) => {
+    // Process for dashboard stats
+    const dashboardState = processDashboardStockIssuance(state, transaction, stakeholder);
 
-    // Validate
-    if (stockClass.sharesIssued + numShares > stockClass.sharesAuthorized) {
-        return {
-            ...state,
-            errors: [...state.errors, `Cannot issue ${numShares} shares - exceeds stock class authorized amount`]
-        };
-    }
 
-    if (state.issuer.sharesIssued + numShares > state.issuer.sharesAuthorized) {
-        return {
-            ...state,
-            errors: [...state.errors, `Cannot issue ${numShares} shares - exceeds issuer authorized amount`]
-        };
-    }
 
-    // Check if stakeholder is founder/board member
-    const shouldCountTowardsRaised = stakeholder &&
-        !['FOUNDER', 'BOARD_MEMBER'].includes(stakeholder.current_relationship);
-    const amountToAdd = shouldCountTowardsRaised ? (numShares * Number(share_price.amount)) : 0;
+    // Process for captable stats with original stock class data
+    const captableState = processCaptableStockIssuance(dashboardState, transaction, stakeholder, stockClass);
 
-    // Calculate non-founder/board shares for valuation
-    const nonFounderShares = Object.entries(state.sharesIssuedByCurrentRelationship)
-        .filter(([relationship, _]) => !['FOUNDER', 'BOARD_MEMBER'].includes(relationship))
-        .reduce((acc, [_, shares]) => acc + shares, 0);
-
-    // Only update valuation if it counts
-    const newValuation = shouldCountTowardsRaised ? {
-        type: 'STOCK',
-        amount: (nonFounderShares + numShares) * Number(share_price.amount),
-        createdAt: transaction.createdAt
-    } : state.valuations.stock;
-
-    // Update state
     return {
-        ...state,
-        issuer: {
-            ...state.issuer,
-            sharesIssued: state.issuer.sharesIssued + numShares
-        },
-        stockClasses: {
-            ...state.stockClasses,
-            [stock_class_id]: {
-                ...stockClass,
-                sharesIssued: stockClass.sharesIssued + numShares
-            }
-        },
-        sharesIssuedByCurrentRelationship: {
-            ...state.sharesIssuedByCurrentRelationship,
-            [stakeholder.current_relationship]: (state.sharesIssuedByCurrentRelationship[stakeholder.current_relationship] || 0) + numShares
-        },
-        totalRaised: state.totalRaised + amountToAdd,
-        latestSharePrice: share_price?.amount || state.latestSharePrice,
-        valuations: {
-            ...state.valuations,
-            stock: newValuation
-        }
+        ...captableState
     };
 };
 
 // Process issuer adjustment
 const processIssuerAdjustment = (state, transaction) => {
+    const newSharesAuthorized = parseInt(transaction.new_shares_authorized);
+
     return {
         ...state,
         issuer: {
             ...state.issuer,
-            sharesAuthorized: parseInt(transaction.new_shares_authorized)
+            sharesAuthorized: newSharesAuthorized
+        },
+        summary: {
+            ...state.summary,
+            totals: {
+                ...state.summary.totals,
+                totalAuthorizedShares: newSharesAuthorized
+            }
         }
     };
 };
@@ -214,26 +115,17 @@ const processStockClassAdjustment = (state, transaction) => {
 
 // Process equity compensation issuance
 const processEquityCompensationIssuance = (state, transaction) => {
-    const { stock_plan_id, quantity } = transaction;
-    const numShares = parseInt(quantity);
+    // Process for dashboard stats
+    const dashboardState = processEquityCompensationIssuance(state, transaction);
 
-    // Use no-stock-plan for missing or zero stock plan IDs
-    const effectiveStockPlanId = (!stock_plan_id || stock_plan_id === '00000000-0000-0000-0000-000000000000')
-        ? 'no-stock-plan'
-        : stock_plan_id;
+    // Find original stock class data
+    const originalStockClass = stockClasses.find(sc => sc._id === transaction.stock_class_id);
 
-    const stockPlan = state.stockPlans[effectiveStockPlanId];
+    // Process for captable stats
+    const captableState = processCaptableEquityCompensationIssuance(dashboardState, transaction, originalStockClass);
 
-    // Update stock plan
     return {
-        ...state,
-        stockPlans: {
-            ...state.stockPlans,
-            [effectiveStockPlanId]: {
-                ...stockPlan,
-                sharesIssued: stockPlan.sharesIssued + numShares
-            }
-        }
+        ...captableState
     };
 };
 
@@ -254,58 +146,25 @@ const processStockPlanAdjustment = (state, transaction) => {
 
 // Process equity compensation exercise
 const processEquityCompensationExercise = (state, transaction) => {
-    const { security_id, quantity, resulting_security_ids } = transaction;
-    const numShares = parseInt(quantity);
+    const dashboardState = processDashboardEquityCompensationExercise(state, transaction);
 
-    // Just check security_id match
-    const equityGrant = state.transactions.find(tx => tx.security_id === security_id);
-
-    if (!equityGrant) {
-        return {
-            ...state,
-            errors: [...state.errors, `Exercise references non-existent equity grant: ${security_id}`]
-        };
-    }
-
-    // Same for stock issuance
-    const stockIssuance = state.transactions.find(tx =>
-        resulting_security_ids.includes(tx.security_id)
-    );
-
-    if (!stockIssuance) {
-        return {
-            ...state,
-            errors: [...state.errors, `Exercise references non-existent stock issuance: ${resulting_security_ids}`]
-        };
-    }
-
-    // Track exercise in state
     return {
-        ...state,
-        equityCompensation: {
-            ...state.equityCompensation,
-            exercises: {
-                ...state.equityCompensation.exercises,
-                [security_id]: {
-                    exercised: (state.equityCompensation.exercises[security_id]?.exercised || 0) + numShares,
-                    stockSecurityId: resulting_security_ids[0]
-                }
-            }
-        }
-    };
+        ...dashboardState
+    }
 };
 
-export const rxjs = async (issuerId) => {
+export const dashboardStats = async (issuerId) => {
     const { issuer, stockClasses, stockPlans, stakeholders, transactions } = await getAllStateMachineObjectsById(issuerId);
 
     console.log("stockPlans", stockPlans);
 
     const finalState = await lastValueFrom(from(transactions).pipe(
-        scan((state, transaction) => processTransaction(state, transaction, stakeholders),
+        scan((state, transaction) => processTransaction(state, transaction, stakeholders, stockClasses),
             createInitialState(issuer, stockClasses, stockPlans, stakeholders)),
         last(),
         tap(state => {
-            const { transactions, ...stateWithoutTransactions } = state;
+            const stateWithoutTransactions = { ...state };
+            delete stateWithoutTransactions.transactions;
             console.log('\nProcessed transaction. New state:', JSON.stringify(stateWithoutTransactions, null, 2));
             if (state.errors.length > 0) {
                 console.log('Errors:', state.errors);
@@ -341,6 +200,33 @@ export const rxjs = async (issuerId) => {
                 valuation: validValuations[0] || null
             };
         })
+    ));
+
+    console.log("finalState", finalState);
+
+    return finalState;
+};
+
+export const captableStats = async (issuerId) => {
+    const { issuer, stockClasses, stockPlans, stakeholders, transactions } = await getAllStateMachineObjectsById(issuerId);
+
+    const finalState = await lastValueFrom(from(transactions).pipe(
+        scan((state, transaction) => processTransaction(state, transaction, stakeholders, stockClasses),
+            createInitialState(issuer, stockClasses, stockPlans, stakeholders)),
+        last(),
+        tap(state => {
+            const stateWithoutTransactions = { ...state };
+            delete stateWithoutTransactions.transactions;
+            console.log('\nProcessed transaction. New state:', JSON.stringify(stateWithoutTransactions, null, 2));
+            if (state.errors.length > 0) {
+                console.log('Errors:', state.errors);
+            }
+        }),
+        map((state) => ({
+            isCapTableEmpty: state.isCapTableEmpty,
+            summary: state.summary,
+            convertibles: state.convertibles
+        }))
     ));
 
     console.log("finalState", finalState);
