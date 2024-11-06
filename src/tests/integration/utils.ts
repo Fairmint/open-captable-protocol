@@ -1,4 +1,3 @@
-import { shutdownServer, startServer } from "../../app";
 import { connectDB } from "../../db/config/mongoose";
 import Fairmint from "../../db/objects/Fairmint";
 import HistoricalTransaction from "../../db/objects/HistoricalTransaction";
@@ -13,24 +12,9 @@ import { typeToModelType } from "../../db/operations/transactions"; // Import th
 
 export const SERVER_BASE = `http://localhost:${process.env.PORT}`;
 
-let _server = null;
-
-export const runLocalServer = async (deseed) => {
-    if (deseed) {
-        await deseedDatabase();
-    }
-    console.log("starting server");
-    _server = await startServer(false);
-};
-
-export const shutdownLocalServer = async () => {
-    console.log("shutting down server");
-    await shutdownServer(_server);
-};
-
 const deleteAllTransactions = async () => {
     for (const ModelType of Object.values(typeToModelType)) {
-        // @ts-ignore
+        // @ts-expect-error
         await ModelType.deleteMany({});
     }
 };

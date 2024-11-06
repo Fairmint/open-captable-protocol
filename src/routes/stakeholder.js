@@ -8,7 +8,7 @@ import {
     removeWalletFromStakeholder,
 } from "../controllers/stakeholderController.js"; // Importing the controller functions
 
-import stakeholderSchema from "../../ocf/schema/objects/Stakeholder.schema.json" assert { type: "json" };
+import stakeholderSchema from "../../ocf/schema/objects/Stakeholder.schema.json";
 import { createStakeholder } from "../db/operations/create.js";
 import { readIssuerById, readStakeholderById, readStakeholderByIssuerAssignedId, getAllStakeholdersByIssuerId } from "../db/operations/read.js";
 import validateInputAgainstOCF from "../utils/validateInputAgainstSchema.js";
@@ -85,7 +85,7 @@ stakeholder.get("/total-number", async (req, res) => {
 });
 
 /// @dev: stakeholder is always created onchain, then to the DB
-// TODO: separate reflect stakeholder from handleStakeholder event 
+// TODO: separate reflect stakeholder from handleStakeholder event
 stakeholder.post("/create", async (req, res) => {
     const { contract } = req;
     const { data, issuerId } = req.body;

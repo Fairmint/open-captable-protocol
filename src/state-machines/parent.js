@@ -1,6 +1,6 @@
 import { actions, createMachine, spawn, stop } from "xstate";
 import { stockMachine } from "./stock.js";
-const { assign, raise } = actions;
+const { assign } = actions;
 
 export const parentMachine = createMachine(
     {

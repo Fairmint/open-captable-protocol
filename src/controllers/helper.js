@@ -1,5 +1,5 @@
-import { isCallException, isError, Interface } from "ethers";
-import CAP_TABLE from "../../chain/out/CapTable.sol/CapTable.json" assert { type: "json" };
+import { isCallException, Interface } from "ethers";
+import CAP_TABLE from "../../chain/out/CapTable.sol/CapTable.json";
 
 // Create an Interface instance
 const icap = new Interface(CAP_TABLE.abi);

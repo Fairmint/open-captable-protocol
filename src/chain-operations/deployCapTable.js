@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
-import CAP_TABLE from "../../chain/out/CapTable.sol/CapTable.json" assert { type: "json" };
-import CAP_TABLE_FACTORY from "../../chain/out/CapTableFactory.sol/CapTableFactory.json" assert { type: "json" };
+import CAP_TABLE from "../../chain/out/CapTable.sol/CapTable.json";
+import CAP_TABLE_FACTORY from "../../chain/out/CapTableFactory.sol/CapTableFactory.json";
 import { readfactories } from "../db/operations/read.js";
 import { toScaledBigNumber } from "../utils/convertToFixedPointDecimals.js";
 import { setupEnv } from "../utils/env.js";
@@ -19,7 +19,7 @@ async function deployCapTable(issuerId, initial_shares_authorized) {
 
     const factories = await readfactories();
     const factoryAddress = factories[0]?.factory_address;
-    console.log({factories, factoryAddress});
+    console.log({ factories, factoryAddress });
 
     if (!factoryAddress) {
         throw new Error(`❌ | Factory address not found`);

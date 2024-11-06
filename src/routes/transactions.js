@@ -2,19 +2,19 @@ import { Router } from "express";
 import { v4 as uuid } from "uuid";
 import Joi from "joi";
 
-import stockAcceptanceSchema from "../../ocf/schema/objects/transactions/acceptance/StockAcceptance.schema.json" assert { type: "json" };
-import issuerAuthorizedSharesAdjustmentSchema from "../../ocf/schema/objects/transactions/adjustment/IssuerAuthorizedSharesAdjustment.schema.json" assert { type: "json" };
-import stockClassAuthorizedSharesAdjustmentSchema from "../../ocf/schema/objects/transactions/adjustment/StockClassAuthorizedSharesAdjustment.schema.json" assert { type: "json" };
-import stockCancellationSchema from "../../ocf/schema/objects/transactions/cancellation/StockCancellation.schema.json" assert { type: "json" };
-import warrantIssuanceSchema from "../../ocf/schema/objects/transactions/issuance/WarrantIssuance.schema.json" assert { type: "json" };
-import convertibleIssuanceSchema from "../../ocf/schema/objects/transactions/issuance/ConvertibleIssuance.schema.json" assert { type: "json" };
-import equityCompensationIssuanceSchema from "../../ocf/schema/objects/transactions/issuance/EquityCompensationIssuance.schema.json" assert { type: "json" };
-import stockIssuanceSchema from "../../ocf/schema/objects/transactions/issuance/StockIssuance.schema.json" assert { type: "json" };
-import stockReissuanceSchema from "../../ocf/schema/objects/transactions/reissuance/StockReissuance.schema.json" assert { type: "json" };
-import stockRepurchaseSchema from "../../ocf/schema/objects/transactions/repurchase/StockRepurchase.schema.json" assert { type: "json" };
-import stockRetractionSchema from "../../ocf/schema/objects/transactions/retraction/StockRetraction.schema.json" assert { type: "json" };
-import equityCompensationExerciseSchema from "../../ocf/schema/objects/transactions/exercise/EquityCompensationExercise.schema.json" assert { type: "json" };
-import stockPlanPoolAdjustmentSchema from "../../ocf/schema/objects/transactions/adjustment/StockPlanPoolAdjustment.schema.json" assert { type: "json" };
+import stockAcceptanceSchema from "../../ocf/schema/objects/transactions/acceptance/StockAcceptance.schema.json";
+import issuerAuthorizedSharesAdjustmentSchema from "../../ocf/schema/objects/transactions/adjustment/IssuerAuthorizedSharesAdjustment.schema.json";
+import stockClassAuthorizedSharesAdjustmentSchema from "../../ocf/schema/objects/transactions/adjustment/StockClassAuthorizedSharesAdjustment.schema.json";
+import stockCancellationSchema from "../../ocf/schema/objects/transactions/cancellation/StockCancellation.schema.json";
+import warrantIssuanceSchema from "../../ocf/schema/objects/transactions/issuance/WarrantIssuance.schema.json";
+import convertibleIssuanceSchema from "../../ocf/schema/objects/transactions/issuance/ConvertibleIssuance.schema.json";
+import equityCompensationIssuanceSchema from "../../ocf/schema/objects/transactions/issuance/EquityCompensationIssuance.schema.json";
+import stockIssuanceSchema from "../../ocf/schema/objects/transactions/issuance/StockIssuance.schema.json";
+import stockReissuanceSchema from "../../ocf/schema/objects/transactions/reissuance/StockReissuance.schema.json";
+import stockRepurchaseSchema from "../../ocf/schema/objects/transactions/repurchase/StockRepurchase.schema.json";
+import stockRetractionSchema from "../../ocf/schema/objects/transactions/retraction/StockRetraction.schema.json";
+import equityCompensationExerciseSchema from "../../ocf/schema/objects/transactions/exercise/EquityCompensationExercise.schema.json";
+import stockPlanPoolAdjustmentSchema from "../../ocf/schema/objects/transactions/adjustment/StockPlanPoolAdjustment.schema.json";
 
 import { convertAndAdjustIssuerAuthorizedSharesOnChain } from "../controllers/issuerController.js";
 import { convertAndAdjustStockClassAuthorizedSharesOnchain } from "../controllers/stockClassController.js";
@@ -60,7 +60,7 @@ transactions.post("/issuance/stock", async (req, res) => {
     const { issuerId, data } = req.body;
 
     try {
-        const issuer = await readIssuerById(issuerId);
+        await readIssuerById(issuerId);
         const incomingStockIssuance = {
             id: uuid(), // for OCF Validation
             security_id: uuid(), // for OCF Validation

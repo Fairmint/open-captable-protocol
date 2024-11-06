@@ -15,9 +15,6 @@ interface OCFObject {
 interface ReferencedFile {
     readonly filepath: string;
 }
-import Busboy from "busboy";
-import yauzl from "yauzl";
-
 // export default processManifest;
 
 // This user-defined type guard may seem redundant with the interface
