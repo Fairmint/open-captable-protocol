@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { v4 as uuid } from "uuid";
-import stockPlanSchema from "../../ocf/schema/objects/StockPlan.schema.json"
+import stockPlanSchema from "../../ocf/schema/objects/StockPlan.schema.json";
 import { createStockPlan } from "../db/operations/create.js";
 import { countStockPlans, readIssuerById, readStockPlanById } from "../db/operations/read.js";
 import validateInputAgainstOCF from "../utils/validateInputAgainstSchema.js";
@@ -53,7 +53,7 @@ stockPlan.get("/verify-quantity-remaining/id/:id", async (req, res) => {
             hasEnoughQuantity,
             sharesAvailable,
             totalShares: stockPlan.initial_shares_reserved,
-            totalIssuedShares
+            totalIssuedShares,
         });
     } catch (error) {
         console.error(error);

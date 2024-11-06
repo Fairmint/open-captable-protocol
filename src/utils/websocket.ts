@@ -117,8 +117,12 @@ const handleEventType = async (log: Log, block: Block, deployed_to: string) => {
                 return;
             }
             const issuerId = issuer._id;
-            const [_, txTypeIdx, txData] = abiCoder.decode(["uint256", "uint8", "bytes"], log.data);
+            const decoded = abiCoder.decode(["uint256", "uint8", "bytes"], log.data);
+            const txTypeIdx = decoded[1] as number;
+            const txData = decoded[2] as string;
+
             const txType = txTypes[txTypeIdx];
+            // @ts-ignore
             const [structType, handleFunc] = txMapper[txTypeIdx];
             const decodedData = abiCoder.decode([structType], txData);
 

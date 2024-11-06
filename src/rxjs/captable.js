@@ -15,7 +15,7 @@ export const processCaptableStockIssuance = (state, transaction, _stakeholder, o
     if (!originalStockClass) {
         return {
             ...state,
-            errors: [...state.errors, `Stock class not found: ${stock_class_id}`]
+            errors: [...state.errors, `Stock class not found: ${stock_class_id}`],
         };
     }
 
@@ -23,24 +23,25 @@ export const processCaptableStockIssuance = (state, transaction, _stakeholder, o
     const classType = originalStockClass.class_type;
 
     // Determine if this is a founder's preferred stock issuance
-    const isFounderPreferred = classType === StockClassTypes.PREFERRED &&
-        transaction.issuance_type === StockIssuanceTypes.FOUNDERS_STOCK;
+    const isFounderPreferred = classType === StockClassTypes.PREFERRED && transaction.issuance_type === StockIssuanceTypes.FOUNDERS_STOCK;
 
     // Calculate voting power and liquidation
     const votingPower = originalStockClass.votes_per_share * numShares;
-    const liquidation = numShares * Number(share_price?.amount || 0);
+    // const liquidation = numShares * Number(share_price?.amount || 1); // TODO(Adam): check if this is correct
+    const liquidation = numShares * Number(originalStockClass.price_per_share.amount) * Number(originalStockClass.liquidation_preference_multiple);
 
     // Update appropriate summary section
     let newSummary = { ...state.summary };
 
     if (isFounderPreferred) {
         // Update or create founder preferred summary
+        // TODO: check if this is correct
         newSummary.founderPreferred = newSummary.founderPreferred || {
             outstandingShares: 0,
             sharesAuthorized: originalStockClass.initial_shares_authorized,
             fullyDilutedShares: 0,
             liquidation: 0,
-            votingPower: 0
+            votingPower: 0,
         };
 
         newSummary.founderPreferred = {
@@ -48,13 +49,14 @@ export const processCaptableStockIssuance = (state, transaction, _stakeholder, o
             outstandingShares: newSummary.founderPreferred.outstandingShares + numShares,
             fullyDilutedShares: newSummary.founderPreferred.fullyDilutedShares + numShares,
             liquidation: newSummary.founderPreferred.liquidation + liquidation,
-            votingPower: newSummary.founderPreferred.votingPower + votingPower
+            votingPower: newSummary.founderPreferred.votingPower + votingPower,
         };
     } else {
+        // Choose common or preferred summary section from `newSummary` object
         const summarySection = classType === StockClassTypes.COMMON ? newSummary.common : newSummary.preferred;
 
         // Find existing row for this stock class
-        const existingRowIndex = summarySection.rows.findIndex(row => row.name === originalStockClass.name);
+        const existingRowIndex = summarySection.rows.findIndex((row) => row.name === originalStockClass.name);
 
         if (existingRowIndex >= 0) {
             // Update existing row
@@ -64,7 +66,7 @@ export const processCaptableStockIssuance = (state, transaction, _stakeholder, o
                 outstandingShares: existingRow.outstandingShares + numShares,
                 fullyDilutedShares: existingRow.fullyDilutedShares + numShares,
                 liquidation: existingRow.liquidation + liquidation,
-                votingPower: existingRow.votingPower + votingPower
+                votingPower: existingRow.votingPower + votingPower,
             };
         } else {
             // Create new row
@@ -74,7 +76,7 @@ export const processCaptableStockIssuance = (state, transaction, _stakeholder, o
                 outstandingShares: numShares,
                 fullyDilutedShares: numShares,
                 liquidation: liquidation,
-                votingPower: votingPower
+                votingPower: votingPower,
             });
         }
     }
@@ -85,13 +87,14 @@ export const processCaptableStockIssuance = (state, transaction, _stakeholder, o
         totalOutstandingShares: newSummary.totals.totalOutstandingShares + numShares,
         totalFullyDilutedShares: newSummary.totals.totalFullyDilutedShares + numShares,
         totalVotingPower: newSummary.totals.totalVotingPower + votingPower,
-        totalLiquidation: (newSummary.totals.totalLiquidation || 0) + liquidation
+        totalLiquidation: (newSummary.totals.totalLiquidation || 0) + liquidation,
     };
 
+    // TODO: check if this is correct
     return {
         ...state,
         summary: newSummary,
-        isCapTableEmpty: false
+        isCapTableEmpty: false,
     };
 };
 
@@ -108,26 +111,26 @@ export const captableInitialState = (issuer, stockClasses, stockPlans, _stakehol
     }, { commonAuthorized: 0, preferredAuthorized: 0 });
 
     // Calculate total stock plan shares
-    const totalStockPlanShares = stockPlans.reduce((sum, plan) => 
+    const totalStockPlanShares = stockPlans.reduce((sum, plan) =>
         sum + parseInt(plan.initial_shares_reserved || 0), 0);
 
     return {
         summary: {
             common: {
                 totalSharesAuthorized: commonAuthorized,
-                rows: []
+                rows: [],
             },
             preferred: {
                 totalSharesAuthorized: preferredAuthorized,
-                rows: []
+                rows: [],
             },
             founderPreferred: null,
             warrantsAndNonPlanAwards: {
-                rows: []
+                rows: [],
             },
             stockPlans: {
-                totalSharesAuthorized: totalStockPlanShares,
-                rows: []
+                totalSharesAuthorized: 0,
+                rows: [],
             },
             totals: {
                 totalAuthorizedShares: parseInt(issuer.initial_shares_authorized || 0),
@@ -136,17 +139,17 @@ export const captableInitialState = (issuer, stockClasses, stockPlans, _stakehol
                 totalFullyPercentage: 0,
                 totalVotingPower: 0,
                 totalVotingPowerPercentage: 0,
-                totalLiquidation: 0
-            }
+                totalLiquidation: 0,
+            },
         },
         convertibles: {
             isEmpty: true,
             convertiblesSummary: {},
             totals: {
-                outstandingAmount: 0
-            }
+                outstandingAmount: 0,
+            },
         },
-        isCapTableEmpty: true
+        isCapTableEmpty: true,
     };
 };
 

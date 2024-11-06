@@ -1,0 +1,1012 @@
+{
+  "issuer": {
+    "_id": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+    "object_type": "ISSUER",
+    "legal_name": "The Source Inc.",
+    "formation_date": "2022-08-23",
+    "country_of_formation": "US",
+    "country_subdivision_of_formation": "DE",
+    "tax_ids": [
+      {
+        "tax_id": "88-3977591",
+        "country": "US"
+      }
+    ],
+    "email": {
+      "email_address": "info@fairmint.com",
+      "email_type": "BUSINESS"
+    },
+    "address": {
+      "address_type": "LEGAL",
+      "street_suite": "447 Broadway\n2nd Fl #713",
+      "city": "New York",
+      "country_subdivision": "NY",
+      "country": "US",
+      "postal_code": "10013"
+    },
+    "initial_shares_authorized": "10000000",
+    "comments": [],
+    "deployed_to": "0x0cbc5B1D3d49D70298712E2C85F17e63464b729d",
+    "tx_hash": "0x0caa5fa6325c21b7295a95d3a70a7776cc138607ba7b082d8323944dfed40628",
+    "last_processed_block": null,
+    "is_manifest_created": false,
+    "createdAt": "2024-09-11T13:10:37.508Z",
+    "updatedAt": "2024-09-11T13:10:37.508Z",
+    "__v": 0
+  },
+  "stockClasses": [
+    {
+      "_id": "9c7f7fb8-0e55-456a-93ca-c08715e67114",
+      "object_type": "STOCK_CLASS",
+      "name": "Class A Common",
+      "class_type": "COMMON",
+      "default_id_prefix": "CA-1",
+      "initial_shares_authorized": "1000000",
+      "board_approval_date": "2022-08-31",
+      "votes_per_share": "1",
+      "par_value": {
+        "amount": "1.23",
+        "currency": "USD"
+      },
+      "price_per_share": {
+        "amount": "1.23",
+        "currency": "USD"
+      },
+      "seniority": "1",
+      "conversion_rights": [],
+      "liquidation_preference_multiple": "1",
+      "participation_cap_multiple": "1",
+      "comments": [],
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "is_onchain_synced": true,
+      "createdAt": "2024-09-11T13:11:34.167Z",
+      "updatedAt": "2024-09-11T13:11:34.284Z",
+      "__v": 0
+    },
+    {
+      "_id": "d4255078-9407-4376-b67d-07c8c5782b0b",
+      "object_type": "STOCK_CLASS",
+      "name": "Class B Common",
+      "class_type": "COMMON",
+      "default_id_prefix": "CS-2",
+      "initial_shares_authorized": "1000000",
+      "board_approval_date": "2022-08-31",
+      "votes_per_share": "1",
+      "par_value": {
+        "amount": "1.43",
+        "currency": "USD"
+      },
+      "price_per_share": {
+        "amount": "1.43",
+        "currency": "USD"
+      },
+      "seniority": "1",
+      "conversion_rights": [],
+      "liquidation_preference_multiple": "1",
+      "participation_cap_multiple": "1",
+      "comments": [],
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "is_onchain_synced": true,
+      "createdAt": "2024-09-11T13:11:42.509Z",
+      "updatedAt": "2024-09-11T13:11:42.652Z",
+      "__v": 0
+    },
+    {
+      "_id": "252a408f-b60c-4a98-a47b-03cea55329f4",
+      "object_type": "STOCK_CLASS",
+      "name": "Series Seed Preferred",
+      "class_type": "PREFERRED",
+      "default_id_prefix": "SAP-1",
+      "initial_shares_authorized": "1000000",
+      "board_approval_date": "2022-08-31",
+      "votes_per_share": "1",
+      "par_value": {
+        "amount": "1.43",
+        "currency": "USD"
+      },
+      "price_per_share": {
+        "amount": "1.43",
+        "currency": "USD"
+      },
+      "seniority": "1",
+      "conversion_rights": [],
+      "liquidation_preference_multiple": "1",
+      "participation_cap_multiple": "1",
+      "comments": [],
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "is_onchain_synced": true,
+      "createdAt": "2024-09-11T13:11:50.808Z",
+      "updatedAt": "2024-09-11T13:11:50.948Z",
+      "__v": 0
+    },
+    {
+      "_id": "bafcaa37-516c-45f4-be58-86dbda64885f",
+      "object_type": "STOCK_CLASS",
+      "name": "Series A Preferred Stock",
+      "class_type": "PREFERRED",
+      "default_id_prefix": "SAP-2",
+      "initial_shares_authorized": "1000000",
+      "board_approval_date": "2022-08-31",
+      "votes_per_share": "1",
+      "par_value": {
+        "amount": "2.10",
+        "currency": "USD"
+      },
+      "price_per_share": {
+        "amount": "2.10",
+        "currency": "USD"
+      },
+      "seniority": "2",
+      "conversion_rights": [],
+      "liquidation_preference_multiple": "2",
+      "participation_cap_multiple": "2",
+      "comments": [],
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "is_onchain_synced": true,
+      "createdAt": "2024-09-11T13:11:59.076Z",
+      "updatedAt": "2024-09-11T13:11:59.182Z",
+      "__v": 0
+    }
+  ],
+  "stockPlans": [
+    {
+      "stock_class_ids": [],
+      "_id": "0fc4f7c3-ba16-4efd-ba7a-578d007b9a6b",
+      "object_type": "STOCK_PLAN",
+      "plan_name": "2024 Stock Incentive Plan",
+      "board_approval_date": "1983-12-31",
+      "initial_shares_reserved": "1000000",
+      "default_cancellation_behavior": "RETURN_TO_POOL",
+      "comments": [],
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "__v": 0
+    }
+  ],
+  "stakeholders": [
+    {
+      "_id": "fbcf1084-7fdc-4bc3-87e0-f61e51492c8f",
+      "object_type": "STAKEHOLDER",
+      "name": {
+        "legal_name": "Adam Momen",
+        "first_name": "Adam",
+        "last_name": "Momen"
+      },
+      "stakeholder_type": "INDIVIDUAL",
+      "current_relationship": "FOUNDER",
+      "primary_contact": {
+        "name": {
+          "legal_name": "Adam Momen",
+          "first_name": "Adam",
+          "last_name": "Momen"
+        },
+        "emails": [
+          {
+            "email_type": "BUSINESS",
+            "email_address": "adam.momen.source@yopmail.com"
+          }
+        ]
+      },
+      "contact_info": {
+        "emails": [
+          {
+            "email_type": "BUSINESS",
+            "email_address": "adam.momen.source@yopmail.com"
+          }
+        ]
+      },
+      "comments": [],
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "is_onchain_synced": true,
+      "addresses": [],
+      "tax_ids": [],
+      "createdAt": "2024-09-11T13:12:07.330Z",
+      "updatedAt": "2024-09-11T13:12:07.525Z",
+      "__v": 0
+    },
+    {
+      "_id": "b76b72bb-a3f7-4ed5-94b8-df7ad278ee5f",
+      "object_type": "STAKEHOLDER",
+      "name": {
+        "legal_name": "William Strat",
+        "first_name": "William",
+        "last_name": "Strat"
+      },
+      "stakeholder_type": "INDIVIDUAL",
+      "current_relationship": "FOUNDER",
+      "primary_contact": {
+        "name": {
+          "legal_name": "William Strat",
+          "first_name": "William",
+          "last_name": "Strat"
+        },
+        "emails": [
+          {
+            "email_type": "BUSINESS",
+            "email_address": "william.strat.source@yopmail.com"
+          }
+        ]
+      },
+      "contact_info": {
+        "emails": [
+          {
+            "email_type": "BUSINESS",
+            "email_address": "william.strat.source@yopmail.com"
+          }
+        ]
+      },
+      "comments": [],
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "is_onchain_synced": true,
+      "addresses": [],
+      "tax_ids": [],
+      "createdAt": "2024-09-11T13:12:15.664Z",
+      "updatedAt": "2024-09-11T13:12:15.815Z",
+      "__v": 0
+    },
+    {
+      "_id": "315f416d-8ed3-411b-9775-8336d764a8d3",
+      "object_type": "STAKEHOLDER",
+      "name": {
+        "legal_name": "Victor Mangini",
+        "first_name": "Victor",
+        "last_name": "Mangini"
+      },
+      "stakeholder_type": "INDIVIDUAL",
+      "current_relationship": "INVESTOR",
+      "primary_contact": {
+        "name": {
+          "legal_name": "Victor Mangini",
+          "first_name": "Victor",
+          "last_name": "Mangini"
+        },
+        "emails": [
+          {
+            "email_type": "BUSINESS",
+            "email_address": "victor.mangini.source@yopmail.com"
+          }
+        ]
+      },
+      "contact_info": {
+        "emails": [
+          {
+            "email_type": "BUSINESS",
+            "email_address": "victor.mangini.source@yopmail.com"
+          }
+        ]
+      },
+      "comments": [],
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "is_onchain_synced": true,
+      "addresses": [],
+      "tax_ids": [],
+      "createdAt": "2024-09-11T13:12:23.943Z",
+      "updatedAt": "2024-09-11T13:12:24.056Z",
+      "__v": 0
+    },
+    {
+      "_id": "08c1ace0-e7df-438a-96a1-5e751afff94c",
+      "object_type": "STAKEHOLDER",
+      "name": {
+        "legal_name": "Tony Soprano",
+        "first_name": "Tony",
+        "last_name": "Soprano"
+      },
+      "stakeholder_type": "INDIVIDUAL",
+      "current_relationship": "INVESTOR",
+      "primary_contact": {
+        "name": {
+          "legal_name": "Tony Soprano",
+          "first_name": "Tony",
+          "last_name": "Soprano"
+        },
+        "emails": [
+          {
+            "email_type": "BUSINESS",
+            "email_address": "tony.soprano.source@yopmail.com"
+          }
+        ]
+      },
+      "contact_info": {
+        "emails": [
+          {
+            "email_type": "BUSINESS",
+            "email_address": "tony.soprano.source@yopmail.com"
+          }
+        ]
+      },
+      "comments": [],
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "is_onchain_synced": true,
+      "addresses": [],
+      "tax_ids": [],
+      "createdAt": "2024-09-11T13:12:40.530Z",
+      "updatedAt": "2024-09-11T13:12:40.690Z",
+      "__v": 0
+    },
+    {
+      "_id": "3f3ed275-3285-4e2b-9e59-5add524f64f2",
+      "object_type": "STAKEHOLDER",
+      "name": {
+        "legal_name": "Bella Hadid",
+        "first_name": "Bella",
+        "last_name": "Hadid"
+      },
+      "stakeholder_type": "INDIVIDUAL",
+      "current_relationship": "INVESTOR",
+      "primary_contact": {
+        "name": {
+          "legal_name": "Bella Hadid",
+          "first_name": "Bella",
+          "last_name": "Hadid"
+        },
+        "emails": [
+          {
+            "email_type": "BUSINESS",
+            "email_address": "bella.hadid.source@yopmail.com"
+          }
+        ]
+      },
+      "contact_info": {
+        "emails": [
+          {
+            "email_type": "BUSINESS",
+            "email_address": "bella.hadid.source@yopmail.com"
+          }
+        ]
+      },
+      "comments": [],
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "is_onchain_synced": true,
+      "addresses": [],
+      "tax_ids": [],
+      "createdAt": "2024-09-11T13:12:48.954Z",
+      "updatedAt": "2024-09-11T13:12:49.089Z",
+      "__v": 0
+    },
+    {
+      "_id": "e054fd56-e13a-4e43-9ed6-6d3d5ea4b1a2",
+      "object_type": "STAKEHOLDER",
+      "name": {
+        "legal_name": "Adamo Gates",
+        "first_name": "Adamo",
+        "last_name": "Gates"
+      },
+      "stakeholder_type": "INDIVIDUAL",
+      "current_relationship": "INVESTOR",
+      "primary_contact": {
+        "name": {
+          "legal_name": "Adamo Gates",
+          "first_name": "Adamo",
+          "last_name": "Gates"
+        },
+        "emails": [
+          {
+            "email_type": "BUSINESS",
+            "email_address": "adamo.gates.source@yopmail.com"
+          }
+        ]
+      },
+      "contact_info": {
+        "emails": [
+          {
+            "email_type": "BUSINESS",
+            "email_address": "adamo.gates.source@yopmail.com"
+          }
+        ]
+      },
+      "comments": [],
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "is_onchain_synced": true,
+      "addresses": [],
+      "tax_ids": [],
+      "createdAt": "2024-09-11T13:12:32.223Z",
+      "updatedAt": "2024-09-11T13:12:32.338Z",
+      "__v": 0
+    }
+  ],
+  "transactions": [
+    {
+      "_id": "e970478e-ea25-f5cd-735a-db796c41a556",
+      "__v": 0,
+      "createdAt": "2024-09-11T13:12:57.623Z",
+      "board_approval_date": "",
+      "comments": [
+        "fairmintData={\"series_id\":\"fd663fae-ad96-4d8f-960c-8114ea3b2aa9\",\"date\":\"2022-08-23\"}"
+      ],
+      "consideration_text": "",
+      "cost_basis": {
+        "amount": "0",
+        "currency": "USD"
+      },
+      "custom_id": "PA-1",
+      "date": "2022-08-23",
+      "is_onchain_synced": true,
+      "issuance_type": "FOUNDERS_STOCK",
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "object_type": "TX_STOCK_ISSUANCE",
+      "quantity": "50000",
+      "security_id": "65e88c7f-c5e3-7855-07d4-7968cb094b2d",
+      "security_law_exemptions": [],
+      "share_numbers_issued": [
+        {
+          "starting_share_number": "0",
+          "ending_share_number": "0"
+        }
+      ],
+      "share_price": {
+        "amount": "1.21",
+        "currency": "USD"
+      },
+      "stakeholder_id": "fbcf1084-7fdc-4bc3-87e0-f61e51492c8f",
+      "stock_class_id": "252a408f-b60c-4a98-a47b-03cea55329f4",
+      "stock_legend_ids": [],
+      "stock_plan_id": "00000000-0000-0000-0000-000000000000",
+      "stockholder_approval_date": "",
+      "updatedAt": "2024-09-11T13:12:57.623Z",
+      "vesting_terms_id": "00000000-0000-0000-0000-000000000000"
+    },
+    {
+      "_id": "fecb3b25-7a2d-9462-b7cd-519c312c8814",
+      "__v": 0,
+      "createdAt": "2024-09-11T13:13:05.968Z",
+      "board_approval_date": "",
+      "comments": [
+        "fairmintData={\"series_id\":\"45e5d593-35cd-4f66-b137-0ab5d04036e2\",\"date\":\"2022-08-23\"}"
+      ],
+      "consideration_text": "",
+      "cost_basis": {
+        "amount": "0",
+        "currency": "USD"
+      },
+      "custom_id": "PA-2",
+      "date": "2022-08-23",
+      "is_onchain_synced": true,
+      "issuance_type": "FOUNDERS_STOCK",
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "object_type": "TX_STOCK_ISSUANCE",
+      "quantity": "60000",
+      "security_id": "bcf5aac8-31fb-73a4-e27b-7fc711042db0",
+      "security_law_exemptions": [],
+      "share_numbers_issued": [
+        {
+          "starting_share_number": "0",
+          "ending_share_number": "0"
+        }
+      ],
+      "share_price": {
+        "amount": "1.21",
+        "currency": "USD"
+      },
+      "stakeholder_id": "b76b72bb-a3f7-4ed5-94b8-df7ad278ee5f",
+      "stock_class_id": "bafcaa37-516c-45f4-be58-86dbda64885f",
+      "stock_legend_ids": [],
+      "stock_plan_id": "00000000-0000-0000-0000-000000000000",
+      "stockholder_approval_date": "",
+      "updatedAt": "2024-09-11T13:13:05.968Z",
+      "vesting_terms_id": "00000000-0000-0000-0000-000000000000"
+    },
+    {
+      "_id": "7ef45e00-687c-1d2f-2a5c-768b7cef824f",
+      "__v": 0,
+      "createdAt": "2024-09-11T13:13:14.206Z",
+      "board_approval_date": "",
+      "comments": [
+        "fairmintData={\"series_id\":\"ed0e6b0b-38bc-4119-8a64-665e3c3187e4\",\"date\":\"2022-08-23\"}"
+      ],
+      "consideration_text": "",
+      "cost_basis": {
+        "amount": "0",
+        "currency": "USD"
+      },
+      "custom_id": "PA-3",
+      "date": "2022-08-23",
+      "is_onchain_synced": true,
+      "issuance_type": "",
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "object_type": "TX_STOCK_ISSUANCE",
+      "quantity": "100000",
+      "security_id": "89616b73-cb50-19d0-b535-95943017ae27",
+      "security_law_exemptions": [],
+      "share_numbers_issued": [
+        {
+          "starting_share_number": "0",
+          "ending_share_number": "0"
+        }
+      ],
+      "share_price": {
+        "amount": "1.21",
+        "currency": "USD"
+      },
+      "stakeholder_id": "315f416d-8ed3-411b-9775-8336d764a8d3",
+      "stock_class_id": "9c7f7fb8-0e55-456a-93ca-c08715e67114",
+      "stock_legend_ids": [],
+      "stock_plan_id": "00000000-0000-0000-0000-000000000000",
+      "stockholder_approval_date": "",
+      "updatedAt": "2024-09-11T13:13:14.206Z",
+      "vesting_terms_id": "00000000-0000-0000-0000-000000000000"
+    },
+    {
+      "_id": "e06cb084-aa1e-18a0-2517-de698bd48b10",
+      "__v": 0,
+      "createdAt": "2024-09-11T13:13:22.546Z",
+      "board_approval_date": "",
+      "comments": [
+        "fairmintData={\"series_id\":\"087abc83-ca1e-49b6-8906-5ba8e3a70411\",\"date\":\"2022-08-23\"}"
+      ],
+      "consideration_text": "",
+      "cost_basis": {
+        "amount": "0",
+        "currency": "USD"
+      },
+      "custom_id": "PA-4",
+      "date": "2022-08-23",
+      "is_onchain_synced": true,
+      "issuance_type": "",
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "object_type": "TX_STOCK_ISSUANCE",
+      "quantity": "100000",
+      "security_id": "f668231e-00c2-92f9-6074-b4b1c880fbfa",
+      "security_law_exemptions": [],
+      "share_numbers_issued": [
+        {
+          "starting_share_number": "0",
+          "ending_share_number": "0"
+        }
+      ],
+      "share_price": {
+        "amount": "1.96",
+        "currency": "USD"
+      },
+      "stakeholder_id": "e054fd56-e13a-4e43-9ed6-6d3d5ea4b1a2",
+      "stock_class_id": "d4255078-9407-4376-b67d-07c8c5782b0b",
+      "stock_legend_ids": [],
+      "stock_plan_id": "00000000-0000-0000-0000-000000000000",
+      "stockholder_approval_date": "",
+      "updatedAt": "2024-09-11T13:13:22.546Z",
+      "vesting_terms_id": "00000000-0000-0000-0000-000000000000"
+    },
+    {
+      "_id": "52614cd8-0139-9a87-aaac-f3163112e14b",
+      "__v": 0,
+      "createdAt": "2024-09-11T13:13:30.843Z",
+      "board_approval_date": "",
+      "comments": [
+        "fairmintData={\"series_id\":\"fd663fae-ad96-4d8f-960c-8114ea3b2aa9\",\"date\":\"2022-08-23\"}"
+      ],
+      "consideration_text": "",
+      "cost_basis": {
+        "amount": "0",
+        "currency": "USD"
+      },
+      "custom_id": "PA-5",
+      "date": "2022-08-23",
+      "is_onchain_synced": true,
+      "issuance_type": "",
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "object_type": "TX_STOCK_ISSUANCE",
+      "quantity": "100000",
+      "security_id": "2122f6c8-7e9e-e96b-7da2-3cc37f23cd9c",
+      "security_law_exemptions": [],
+      "share_numbers_issued": [
+        {
+          "starting_share_number": "0",
+          "ending_share_number": "0"
+        }
+      ],
+      "share_price": {
+        "amount": "1.87",
+        "currency": "USD"
+      },
+      "stakeholder_id": "08c1ace0-e7df-438a-96a1-5e751afff94c",
+      "stock_class_id": "252a408f-b60c-4a98-a47b-03cea55329f4",
+      "stock_legend_ids": [],
+      "stock_plan_id": "00000000-0000-0000-0000-000000000000",
+      "stockholder_approval_date": "",
+      "updatedAt": "2024-09-11T13:13:30.843Z",
+      "vesting_terms_id": "00000000-0000-0000-0000-000000000000"
+    },
+    {
+      "_id": "cd205f39-a142-f39d-8d93-c75de4996449",
+      "__v": 0,
+      "createdAt": "2024-09-11T13:13:39.207Z",
+      "board_approval_date": "",
+      "comments": [
+        "fairmintData={\"series_id\":\"45e5d593-35cd-4f66-b137-0ab5d04036e2\",\"date\":\"2022-08-23\"}"
+      ],
+      "consideration_text": "",
+      "cost_basis": {
+        "amount": "0",
+        "currency": "USD"
+      },
+      "custom_id": "PA-6",
+      "date": "2022-08-23",
+      "is_onchain_synced": true,
+      "issuance_type": "",
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "object_type": "TX_STOCK_ISSUANCE",
+      "quantity": "100000",
+      "security_id": "d64b0be7-09fd-d4eb-8872-fd3be1bb89eb",
+      "security_law_exemptions": [],
+      "share_numbers_issued": [
+        {
+          "starting_share_number": "0",
+          "ending_share_number": "0"
+        }
+      ],
+      "share_price": {
+        "amount": "2.1",
+        "currency": "USD"
+      },
+      "stakeholder_id": "3f3ed275-3285-4e2b-9e59-5add524f64f2",
+      "stock_class_id": "bafcaa37-516c-45f4-be58-86dbda64885f",
+      "stock_legend_ids": [],
+      "stock_plan_id": "00000000-0000-0000-0000-000000000000",
+      "stockholder_approval_date": "",
+      "updatedAt": "2024-09-11T13:13:39.207Z",
+      "vesting_terms_id": "00000000-0000-0000-0000-000000000000"
+    },
+    {
+      "vestings": [],
+      "_id": "7ff5f762-d7ea-40ff-b0ef-4be4eed1b642",
+      "object_type": "TX_EQUITY_COMPENSATION_ISSUANCE",
+      "stock_plan_id": "",
+      "stock_class_id": "d4255078-9407-4376-b67d-07c8c5782b0b",
+      "compensation_type": "OPTION",
+      "option_grant_type": "ISO",
+      "quantity": "50000",
+      "exercise_price": {
+        "amount": "5.00",
+        "currency": "USD"
+      },
+      "expiration_date": "2031-01-20",
+      "termination_exercise_windows": [
+        {
+          "reason": "INVOLUNTARY_WITH_CAUSE",
+          "period": 1,
+          "period_type": "DAYS"
+        }
+      ],
+      "comments": [
+        "use-case: Class B Non-Plan row"
+      ],
+      "security_id": "8a829368-0525-499c-aa3a-3b380f9d6957",
+      "date": "2019-12-12",
+      "custom_id": "",
+      "stakeholder_id": "08c1ace0-e7df-438a-96a1-5e751afff94c",
+      "board_approval_date": "2021-01-21",
+      "consideration_text": "",
+      "security_law_exemptions": [
+        {
+          "description": "Exemption",
+          "jurisdiction": "CA"
+        }
+      ],
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "__v": 0
+    },
+    {
+      "vestings": [],
+      "_id": "724e3704-14de-4d37-bb25-7a552e079e1f",
+      "object_type": "TX_EQUITY_COMPENSATION_ISSUANCE",
+      "stock_plan_id": "0fc4f7c3-ba16-4efd-ba7a-578d007b9a6b",
+      "stock_class_id": "d4255078-9407-4376-b67d-07c8c5782b0b",
+      "compensation_type": "OPTION",
+      "option_grant_type": "ISO",
+      "quantity": "50000",
+      "exercise_price": {
+        "amount": "5.00",
+        "currency": "USD"
+      },
+      "expiration_date": "2031-01-20",
+      "termination_exercise_windows": [
+        {
+          "reason": "INVOLUNTARY_WITH_CAUSE",
+          "period": 1,
+          "period_type": "DAYS"
+        }
+      ],
+      "comments": [
+        "use-case: Outstanding issued for stock plan id - stock-plan-id-1, row Class A Common Stock Options Outstanding"
+      ],
+      "security_id": "d7f27521-f278-43e5-8971-7e6017873f91",
+      "date": "2019-12-12",
+      "custom_id": "",
+      "stakeholder_id": "315f416d-8ed3-411b-9775-8336d764a8d3",
+      "board_approval_date": "2021-01-21",
+      "consideration_text": "",
+      "security_law_exemptions": [
+        {
+          "description": "Exemption",
+          "jurisdiction": "CA"
+        }
+      ],
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "__v": 0
+    },
+    {
+      "_id": "126aa0b2-bb1a-4ce0-b7a3-4f2877e30ae3",
+      "object_type": "TX_CONVERTIBLE_ISSUANCE",
+      "investment_amount": {
+        "amount": "250000",
+        "currency": "USD"
+      },
+      "convertible_type": "SAFE",
+      "conversion_triggers": [
+        {
+          "trigger_id": "b2360163-47dc-4f7b-a03e-4f59d1e1191d",
+          "nickname": "Next Financing",
+          "trigger_description": "Conversion at Next Equity Financing",
+          "type": "AUTOMATIC_ON_CONDITION",
+          "trigger_condition": "SAFE shall convert upon completion of next equity financing (as defined in the instrument)",
+          "conversion_right": {
+            "type": "CONVERTIBLE_CONVERSION_RIGHT",
+            "conversion_mechanism": {
+              "type": "SAFE_CONVERSION",
+              "conversion_valuation_cap": {
+                "amount": "7000000",
+                "currency": "USD"
+              },
+              "capitalization_definition_rules": {
+                "include_outstanding_shares": true,
+                "include_outstanding_options": true,
+                "include_outstanding_unissued_options": true,
+                "include_this_security": true,
+                "include_other_converting_securities": true,
+                "include_option_pool_topup_for_promised_options": true,
+                "include_additional_option_pool_topup": true,
+                "include_new_money": true
+              },
+              "conversion_mfn": false,
+              "conversion_timing": "POST_MONEY"
+            },
+            "converts_to_future_round": true
+          }
+        }
+      ],
+      "seniority": 1,
+      "comments": [],
+      "security_id": "44b38e23-7eb1-4208-ad0e-bf1b9f95c5f2",
+      "date": "2024-01-16",
+      "custom_id": "CN-4",
+      "stakeholder_id": "08c1ace0-e7df-438a-96a1-5e751afff94c",
+      "security_law_exemptions": [
+        {
+          "description": "Regulation D 506(b)",
+          "jurisdiction": "US"
+        }
+      ],
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "createdAt": "2024-09-11T13:14:00.224Z",
+      "updatedAt": "2024-09-11T13:14:00.224Z",
+      "__v": 0
+    },
+    {
+      "_id": "62f582a5-614a-403b-afc7-85ff99f6ddc8",
+      "object_type": "TX_CONVERTIBLE_ISSUANCE",
+      "investment_amount": {
+        "amount": "125000",
+        "currency": "USD"
+      },
+      "convertible_type": "SAFE",
+      "conversion_triggers": [
+        {
+          "trigger_id": "b2360163-47dc-4f7b-a03e-4f59d1e1191d",
+          "nickname": "Next Financing",
+          "trigger_description": "Conversion at Next Equity Financing",
+          "type": "AUTOMATIC_ON_CONDITION",
+          "trigger_condition": "SAFE shall convert upon completion of next equity financing (as defined in the instrument)",
+          "conversion_right": {
+            "type": "CONVERTIBLE_CONVERSION_RIGHT",
+            "conversion_mechanism": {
+              "type": "SAFE_CONVERSION",
+              "conversion_valuation_cap": {
+                "amount": "7000000",
+                "currency": "USD"
+              },
+              "capitalization_definition_rules": {
+                "include_outstanding_shares": true,
+                "include_outstanding_options": true,
+                "include_outstanding_unissued_options": true,
+                "include_this_security": true,
+                "include_other_converting_securities": true,
+                "include_option_pool_topup_for_promised_options": true,
+                "include_additional_option_pool_topup": true,
+                "include_new_money": true
+              },
+              "conversion_mfn": false,
+              "conversion_timing": "POST_MONEY"
+            },
+            "converts_to_future_round": true
+          }
+        }
+      ],
+      "seniority": 1,
+      "comments": [],
+      "security_id": "5ff84bdb-0d36-468f-bc5b-0314dd0332eb",
+      "date": "2024-01-16",
+      "custom_id": "CN-5",
+      "stakeholder_id": "e054fd56-e13a-4e43-9ed6-6d3d5ea4b1a2",
+      "security_law_exemptions": [
+        {
+          "description": "Regulation D 506(b)",
+          "jurisdiction": "US"
+        }
+      ],
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "createdAt": "2024-09-11T13:14:04.231Z",
+      "updatedAt": "2024-09-11T13:14:04.231Z",
+      "__v": 0
+    },
+    {
+      "_id": "b9026946-5fe7-4733-9f00-65d461dd45fb",
+      "object_type": "TX_CONVERTIBLE_ISSUANCE",
+      "investment_amount": {
+        "amount": "212000",
+        "currency": "USD"
+      },
+      "convertible_type": "SAFE",
+      "conversion_triggers": [
+        {
+          "trigger_id": "b2360163-47dc-4f7b-a03e-4f59d1e1191d",
+          "nickname": "Next Financing",
+          "trigger_description": "Conversion at Next Equity Financing",
+          "type": "AUTOMATIC_ON_CONDITION",
+          "trigger_condition": "SAFE shall convert upon completion of next equity financing (as defined in the instrument)",
+          "conversion_right": {
+            "type": "CONVERTIBLE_CONVERSION_RIGHT",
+            "conversion_mechanism": {
+              "type": "SAFE_CONVERSION",
+              "conversion_valuation_cap": {
+                "amount": "9000000",
+                "currency": "USD"
+              },
+              "capitalization_definition_rules": {
+                "include_outstanding_shares": true,
+                "include_outstanding_options": true,
+                "include_outstanding_unissued_options": true,
+                "include_this_security": true,
+                "include_other_converting_securities": true,
+                "include_option_pool_topup_for_promised_options": true,
+                "include_additional_option_pool_topup": true,
+                "include_new_money": true
+              },
+              "conversion_mfn": false,
+              "conversion_timing": "PRE_MONEY"
+            },
+            "converts_to_future_round": true
+          }
+        }
+      ],
+      "seniority": 1,
+      "comments": [],
+      "security_id": "c1b67ffd-a0f6-4821-8c50-c9465982b222",
+      "date": "2024-01-16",
+      "custom_id": "CN-6",
+      "stakeholder_id": "315f416d-8ed3-411b-9775-8336d764a8d3",
+      "security_law_exemptions": [
+        {
+          "description": "Regulation D 506(b)",
+          "jurisdiction": "US"
+        }
+      ],
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "createdAt": "2024-09-11T13:14:08.068Z",
+      "updatedAt": "2024-09-11T13:14:08.068Z",
+      "__v": 0
+    },
+    {
+      "_id": "8d4460b3-a13d-4333-8540-c8ba9dddb366",
+      "object_type": "TX_CONVERTIBLE_ISSUANCE",
+      "investment_amount": {
+        "amount": "123000",
+        "currency": "USD"
+      },
+      "convertible_type": "SAFE",
+      "conversion_triggers": [
+        {
+          "trigger_id": "b2360163-47dc-4f7b-a03e-4f59d1e1191d",
+          "nickname": "Next Financing",
+          "trigger_description": "Conversion at Next Equity Financing",
+          "type": "AUTOMATIC_ON_CONDITION",
+          "trigger_condition": "SAFE shall convert upon completion of next equity financing (as defined in the instrument)",
+          "conversion_right": {
+            "type": "CONVERTIBLE_CONVERSION_RIGHT",
+            "conversion_mechanism": {
+              "type": "SAFE_CONVERSION",
+              "conversion_valuation_cap": {
+                "amount": "9000000",
+                "currency": "USD"
+              },
+              "capitalization_definition_rules": {
+                "include_outstanding_shares": true,
+                "include_outstanding_options": true,
+                "include_outstanding_unissued_options": true,
+                "include_this_security": true,
+                "include_other_converting_securities": true,
+                "include_option_pool_topup_for_promised_options": true,
+                "include_additional_option_pool_topup": true,
+                "include_new_money": true
+              },
+              "conversion_mfn": false,
+              "conversion_timing": "PRE_MONEY"
+            },
+            "converts_to_future_round": true
+          }
+        }
+      ],
+      "seniority": 1,
+      "comments": [],
+      "security_id": "a6fefa15-a3e7-4c5e-94f0-8f20748cc4ef",
+      "date": "2024-01-16",
+      "custom_id": "CN-7",
+      "stakeholder_id": "3f3ed275-3285-4e2b-9e59-5add524f64f2",
+      "security_law_exemptions": [
+        {
+          "description": "Regulation D 506(b)",
+          "jurisdiction": "US"
+        }
+      ],
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "createdAt": "2024-09-11T13:14:11.978Z",
+      "updatedAt": "2024-09-11T13:14:11.978Z",
+      "__v": 0
+    },
+    {
+      "_id": "d187af40-6b1f-4f0c-83e6-72a40f694d40",
+      "object_type": "TX_CONVERTIBLE_ISSUANCE",
+      "investment_amount": {
+        "amount": "400000",
+        "currency": "USD"
+      },
+      "convertible_type": "NOTE",
+      "conversion_triggers": [
+        {
+          "trigger_id": "b2360163-47dc-4f7b-a03e-4f59d1e1191d",
+          "nickname": "Next Financing",
+          "trigger_description": "Conversion at Next Equity Financing",
+          "type": "AUTOMATIC_ON_CONDITION",
+          "trigger_condition": "NOTE shall convert upon completion of next equity financing (as defined in the instrument)",
+          "conversion_right": {
+            "type": "CONVERTIBLE_CONVERSION_RIGHT",
+            "conversion_mechanism": {
+              "type": "SAFE_CONVERSION",
+              "conversion_valuation_cap": {
+                "amount": "9000000",
+                "currency": "USD"
+              },
+              "capitalization_definition_rules": {
+                "include_outstanding_shares": true,
+                "include_outstanding_options": true,
+                "include_outstanding_unissued_options": true,
+                "include_this_security": true,
+                "include_other_converting_securities": true,
+                "include_option_pool_topup_for_promised_options": true,
+                "include_additional_option_pool_topup": true,
+                "include_new_money": true
+              },
+              "conversion_mfn": false,
+              "conversion_timing": "PRE_MONEY"
+            },
+            "converts_to_future_round": true
+          }
+        }
+      ],
+      "seniority": 1,
+      "comments": [],
+      "security_id": "06255304-5ac6-4e70-8813-1a4165cf2124",
+      "date": "2024-01-16",
+      "custom_id": "CN-7",
+      "stakeholder_id": "3f3ed275-3285-4e2b-9e59-5add524f64f2",
+      "security_law_exemptions": [
+        {
+          "description": "Regulation D 506(b)",
+          "jurisdiction": "US"
+        }
+      ],
+      "issuer": "d8b01157-d204-4960-b56b-5fcd3db3741b",
+      "createdAt": "2024-09-11T13:14:15.737Z",
+      "updatedAt": "2024-09-11T13:14:15.737Z",
+      "__v": 0
+    }
+  ]
+}

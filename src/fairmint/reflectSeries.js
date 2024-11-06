@@ -23,7 +23,7 @@ export const reflectSeries = async ({
             stock_plan_id,
             series_type,
             price_per_share,
-            date
+            date,
         });
 
         console.log("Successfully reflected Series into Fairmint");

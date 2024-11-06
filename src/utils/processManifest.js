@@ -6,7 +6,7 @@ const processManifest = (req) => {
         const arr = [];
         const busboy = Busboy({ headers: req.headers });
 
-        busboy.on("file", (_, file, filename) => {
+        busboy.on("file", (_, file) => {
             const chunks = [];
             file.on("data", (data) => {
                 chunks.push(data);

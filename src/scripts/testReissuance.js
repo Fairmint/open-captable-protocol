@@ -8,7 +8,7 @@ connectDB();
 const main = async () => {
     const lastStockIssuance = await StockIssuance.find().sort({ updatedAt: -1 }).limit(1);
     console.log("lastStockIssuance", lastStockIssuance[0]);
-    const { issuer, security_id, stakeholder_id, stock_class_id, quantity } = lastStockIssuance[0];
+    const { issuer, security_id, stakeholder_id, stock_class_id } = lastStockIssuance[0];
 
     console.log("⏳ | Creating stock reissuance");
 
