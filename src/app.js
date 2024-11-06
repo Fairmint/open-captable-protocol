@@ -88,20 +88,21 @@ const startServer = async () => {
     app.listen(PORT, async () => {
         console.log(`🚀  Server successfully launched at:${PORT}`);
 
-        const issuers = await readAllIssuers() || null
+        const issuers = (await readAllIssuers()) || null;
         if (issuers) {
-            const contractAddresses = issuers.filter(issuer => issuer?.deployed_to).reduce((acc, issuer) => {
-                acc[issuer.id] = issuer.deployed_to;
-                return acc;
-            }, {});
+            const contractAddresses = issuers
+                .filter((issuer) => issuer?.deployed_to)
+                .reduce((acc, issuer) => {
+                    acc[issuer.id] = issuer.deployed_to;
+                    return acc;
+                }, {});
 
-            console.log(contractAddresses)
+            console.log(contractAddresses);
             console.log("Issuer -> Contract Address");
-            const contractsToWatch = Object.values(contractAddresses)
+            const contractsToWatch = Object.values(contractAddresses);
             console.log("Watching ", contractsToWatch.length, " Contracts");
             // startListener(contractsToWatch);
         }
-
     });
     app.on("error", (err) => {
         console.error(err);
@@ -112,7 +113,6 @@ const startServer = async () => {
         }
     });
 };
-
 
 startServer().catch((error) => {
     console.error("Error starting server:", error);

@@ -1,7 +1,7 @@
 import { v4 as uuid } from "uuid";
 import validateInputAgainstOCF from "./utils/validateInputAgainstSchema.js";
-import convertibleIssuanceSchema from "../ocf/schema/objects/transactions/issuance/ConvertibleIssuance.schema.json" assert { type: "json" };
-import warrantIssuanceSchema from "../ocf/schema/objects/transactions/issuance/WarrantIssuance.schema.json" assert { type: "json" };
+import convertibleIssuanceSchema from "../ocf/schema/objects/transactions/issuance/ConvertibleIssuance.schema.json";
+import warrantIssuanceSchema from "../ocf/schema/objects/transactions/issuance/WarrantIssuance.schema.json";
 
 const convertible_data = {
     security_law_exemptions: [

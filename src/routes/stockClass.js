@@ -1,13 +1,10 @@
 import { Router } from "express";
 import { v4 as uuid } from "uuid";
-import stockClassSchema from "../../ocf/schema/objects/StockClass.schema.json" assert { type: "json" };
+import stockClassSchema from "../../ocf/schema/objects/StockClass.schema.json";
 import { convertAndReflectStockClassOnchain, getStockClassById, getTotalNumberOfStockClasses } from "../controllers/stockClassController.js";
 import { createStockClass } from "../db/operations/create.js";
 import { readIssuerById, readStockClassById } from "../db/operations/read.js";
 import validateInputAgainstOCF from "../utils/validateInputAgainstSchema.js";
-import { getJoiErrorMessage } from "../chain-operations/utils.js";
-import Joi from "joi";
-import { createFairmintData } from "../db/operations/create.js";
 
 const stockClass = Router();
 
