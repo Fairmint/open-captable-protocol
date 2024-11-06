@@ -37,7 +37,7 @@ stockLegend.get("/total-number", async (_, res) => {
 stockLegend.post("/create", async (req, res) => {
     const { data, issuerId } = req.body;
     try {
-        const issuer = await readIssuerById(issuerId);
+        await readIssuerById(issuerId);
 
         const incomingStockLegendToValidate = {
             id: uuid(),
@@ -47,7 +47,7 @@ stockLegend.post("/create", async (req, res) => {
 
         const incomingStockLegendForDB = {
             ...incomingStockLegendToValidate,
-            issuer: issuer._id,
+            issuer: issuerId,
         };
 
         await validateInputAgainstOCF(incomingStockLegendToValidate, stockLegendSchema);
