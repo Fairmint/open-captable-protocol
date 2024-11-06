@@ -145,150 +145,151 @@ const processEquityCompensationIssuance = (state, transaction, stockClass) => {
     //     };
     // };
 
-    // Process stock plan adjustment
-    const processStockPlanAdjustment = (state, transaction) => {
-        const { stock_plan_id, shares_reserved } = transaction;
-        const newSharesReserved = parseInt(shares_reserved);
+}
+// Process stock plan adjustment
+const processStockPlanAdjustment = (state, transaction) => {
+    const { stock_plan_id, shares_reserved } = transaction;
+    const newSharesReserved = parseInt(shares_reserved);
 
-        // Update dashboard state
-        const newState = {
-            ...state,
-            stockPlans: {
-                ...state.stockPlans,
-                [stock_plan_id]: {
-                    ...state.stockPlans[stock_plan_id],
-                    sharesReserved: newSharesReserved
-                }
+    // Update dashboard state
+    const newState = {
+        ...state,
+        stockPlans: {
+            ...state.stockPlans,
+            [stock_plan_id]: {
+                ...state.stockPlans[stock_plan_id],
+                sharesReserved: newSharesReserved
             }
-        };
-
-        // Update captable state
-        const stockPlan = state.stockPlans[stock_plan_id];
-        if (!stockPlan) return newState;
-
-        // Calculate total issued shares for this plan
-        const totalIssuedShares = newState.summary.stockPlans.rows
-            .filter(row => row.name.startsWith(stockPlan.name) && row.name !== 'Available for Grants')
-            .reduce((sum, row) => sum + row.fullyDilutedShares, 0);
-
-        // Update available shares
-        const availableForGrants = newSharesReserved - totalIssuedShares;
-
-        // Update or create "Available for Grants" row
-        const availableRowIndex = newState.summary.stockPlans.rows.findIndex(row => row.name === 'Available for Grants');
-        if (availableRowIndex >= 0) {
-            newState.summary.stockPlans.rows[availableRowIndex].fullyDilutedShares = availableForGrants;
-        } else if (availableForGrants > 0) {
-            newState.summary.stockPlans.rows.push({
-                name: 'Available for Grants',
-                fullyDilutedShares: availableForGrants
-            });
         }
-
-        // Update total authorized shares in summary
-        newState.summary.stockPlans.totalSharesAuthorized = Object.values(newState.stockPlans)
-            .reduce((sum, plan) => sum + (plan.sharesReserved || 0), 0);
-
-        return newState;
     };
 
-    // Process equity compensation exercise
-    const processEquityCompensationExercise = (state, transaction) => {
-        const dashboardState = processDashboardEquityCompensationExercise(state, transaction);
+    // Update captable state
+    const stockPlan = state.stockPlans[stock_plan_id];
+    if (!stockPlan) return newState;
 
-        return {
-            ...dashboardState,
-        };
+    // Calculate total issued shares for this plan
+    const totalIssuedShares = newState.summary.stockPlans.rows
+        .filter(row => row.name.startsWith(stockPlan.name) && row.name !== 'Available for Grants')
+        .reduce((sum, row) => sum + row.fullyDilutedShares, 0);
+
+    // Update available shares
+    const availableForGrants = newSharesReserved - totalIssuedShares;
+
+    // Update or create "Available for Grants" row
+    const availableRowIndex = newState.summary.stockPlans.rows.findIndex(row => row.name === 'Available for Grants');
+    if (availableRowIndex >= 0) {
+        newState.summary.stockPlans.rows[availableRowIndex].fullyDilutedShares = availableForGrants;
+    } else if (availableForGrants > 0) {
+        newState.summary.stockPlans.rows.push({
+            name: 'Available for Grants',
+            fullyDilutedShares: availableForGrants
+        });
+    }
+
+    // Update total authorized shares in summary
+    newState.summary.stockPlans.totalSharesAuthorized = Object.values(newState.stockPlans)
+        .reduce((sum, plan) => sum + (plan.sharesReserved || 0), 0);
+
+    return newState;
+};
+
+// Process equity compensation exercise
+const processEquityCompensationExercise = (state, transaction) => {
+    const dashboardState = processDashboardEquityCompensationExercise(state, transaction);
+
+    return {
+        ...dashboardState,
     };
+};
 
-    export const dashboardStats = async (issuerId) => {
-        const { issuer, stockClasses, stockPlans, stakeholders, transactions } = await getAllStateMachineObjectsById(issuerId);
+export const dashboardStats = async (issuerId) => {
+    const { issuer, stockClasses, stockPlans, stakeholders, transactions } = await getAllStateMachineObjectsById(issuerId);
 
-        console.log("stockPlans", stockPlans);
+    console.log("stockPlans", stockPlans);
 
-        const finalState = await lastValueFrom(
-            from(transactions).pipe(
-                scan(
-                    (state, transaction) => processTransaction(state, transaction, stakeholders, stockClasses),
-                    createInitialState(issuer, stockClasses, stockPlans, stakeholders)
-                ),
-                last(),
-                tap((state) => {
-                    const stateWithoutTransactions = { ...state };
-                    delete stateWithoutTransactions.transactions;
-                    console.log("\nProcessed transaction. New state:", JSON.stringify(stateWithoutTransactions, null, 2));
-                    if (state.errors.length > 0) {
-                        console.log("Errors:", state.errors);
-                    }
-                }),
-                map((state) => {
-                    // Calculate ownership percentages
-                    const ownership = Object.entries(state.sharesIssuedByCurrentRelationship).reduce(
-                        (acc, [relationship, shares]) => ({
-                            ...acc,
-                            [relationship]:
-                                state.issuer.sharesIssued > 0
-                                    ? Number((shares / state.issuer.sharesIssued).toFixed(4)) // 4 decimal places
-                                    : 0,
-                        }),
-                        {}
-                    );
+    const finalState = await lastValueFrom(
+        from(transactions).pipe(
+            scan(
+                (state, transaction) => processTransaction(state, transaction, stakeholders, stockClasses),
+                createInitialState(issuer, stockClasses, stockPlans, stakeholders)
+            ),
+            last(),
+            tap((state) => {
+                const stateWithoutTransactions = { ...state };
+                delete stateWithoutTransactions.transactions;
+                console.log("\nProcessed transaction. New state:", JSON.stringify(stateWithoutTransactions, null, 2));
+                if (state.errors.length > 0) {
+                    console.log("Errors:", state.errors);
+                }
+            }),
+            map((state) => {
+                // Calculate ownership percentages
+                const ownership = Object.entries(state.sharesIssuedByCurrentRelationship).reduce(
+                    (acc, [relationship, shares]) => ({
+                        ...acc,
+                        [relationship]:
+                            state.issuer.sharesIssued > 0
+                                ? Number((shares / state.issuer.sharesIssued).toFixed(4)) // 4 decimal places
+                                : 0,
+                    }),
+                    {}
+                );
 
-                    // Get most recent valid valuation
-                    const validValuations = [state.valuations.stock, state.valuations.convertible]
-                        .filter((v) => v && v.amount)
-                        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                // Get most recent valid valuation
+                const validValuations = [state.valuations.stock, state.valuations.convertible]
+                    .filter((v) => v && v.amount)
+                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-                    console.log("validValuations", validValuations);
+                console.log("validValuations", validValuations);
 
-                    return {
-                        numOfStakeholders: state.numOfStakeholders,
-                        totalRaised: state.totalRaised,
-                        totalStockPlanAuthorizedShares: Object.entries(state.stockPlans)
-                            .filter(([id, _]) => id !== "no-stock-plan")
-                            .reduce((acc, [_, plan]) => acc + parseInt(plan.sharesReserved), 0),
-                        sharesIssuedByCurrentRelationship: state.sharesIssuedByCurrentRelationship,
-                        totalIssuerAuthorizedShares: state.issuer.sharesAuthorized,
-                        latestSharePrice: Number(state.latestSharePrice),
-                        ownership,
-                        valuation: validValuations[0] || null,
-                    };
-                })
-            )
-        );
+                return {
+                    numOfStakeholders: state.numOfStakeholders,
+                    totalRaised: state.totalRaised,
+                    totalStockPlanAuthorizedShares: Object.entries(state.stockPlans)
+                        .filter(([id, _]) => id !== "no-stock-plan")
+                        .reduce((acc, [_, plan]) => acc + parseInt(plan.sharesReserved), 0),
+                    sharesIssuedByCurrentRelationship: state.sharesIssuedByCurrentRelationship,
+                    totalIssuerAuthorizedShares: state.issuer.sharesAuthorized,
+                    latestSharePrice: Number(state.latestSharePrice),
+                    ownership,
+                    valuation: validValuations[0] || null,
+                };
+            })
+        )
+    );
 
-        console.log("finalState", finalState);
+    console.log("finalState", finalState);
 
-        return finalState;
-    };
+    return finalState;
+};
 
-    export const captableStats = async () => {
-        const { issuer, stockClasses, stockPlans, stakeholders, transactions } = data;
+export const captableStats = async () => {
+    const { issuer, stockClasses, stockPlans, stakeholders, transactions } = data;
 
-        const finalState = await lastValueFrom(
-            from(transactions).pipe(
-                scan(
-                    (state, transaction) => processTransaction(state, transaction, stakeholders, stockClasses),
-                    createInitialState(issuer, stockClasses, stockPlans, stakeholders)
-                ),
-                last(),
-                tap((state) => {
-                    // const stateWithoutTransactions = { ...state };
-                    // delete stateWithoutTransactions.transactions;
-                    // console.log("\nProcessed transaction. New state:", JSON.stringify(stateWithoutTransactions, null, 2));
-                    // if (state.errors.length > 0) {
-                    //     console.log("Errors:", state.errors);
-                    // }
-                }),
-                map((state) => ({
-                    isCapTableEmpty: state.isCapTableEmpty,
-                    summary: state.summary,
-                    convertibles: state.convertibles,
-                }))
-            )
-        );
+    const finalState = await lastValueFrom(
+        from(transactions).pipe(
+            scan(
+                (state, transaction) => processTransaction(state, transaction, stakeholders, stockClasses),
+                createInitialState(issuer, stockClasses, stockPlans, stakeholders)
+            ),
+            last(),
+            tap((state) => {
+                // const stateWithoutTransactions = { ...state };
+                // delete stateWithoutTransactions.transactions;
+                // console.log("\nProcessed transaction. New state:", JSON.stringify(stateWithoutTransactions, null, 2));
+                // if (state.errors.length > 0) {
+                //     console.log("Errors:", state.errors);
+                // }
+            }),
+            map((state) => ({
+                isCapTableEmpty: state.isCapTableEmpty,
+                summary: state.summary,
+                convertibles: state.convertibles,
+            }))
+        )
+    );
 
-        // console.log("finalState", finalState);
+    // console.log("finalState", finalState);
 
-        return finalState;
-    };
+    return finalState;
+}
