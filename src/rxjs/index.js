@@ -39,7 +39,7 @@ const processTransaction = (state, transaction, stakeholders, stockClasses) => {
         case 'TX_STOCK_CLASS_AUTHORIZED_SHARES_ADJUSTMENT':
             return processStockClassAdjustment(newState, transaction);
         case 'TX_EQUITY_COMPENSATION_ISSUANCE':
-            return processEquityCompensationIssuance(newState, transaction);
+            return processEquityCompensationIssuance(newState, transaction, stockClass);
         case 'TX_STOCK_PLAN_POOL_ADJUSTMENT':
             return processStockPlanAdjustment(newState, transaction);
         case 'TX_EQUITY_COMPENSATION_EXERCISE':
@@ -81,6 +81,10 @@ const processStockIssuance = (state, transaction, stakeholder, stockClass) => {
 // Process issuer adjustment
 const processIssuerAdjustment = (state, transaction) => {
     const newSharesAuthorized = parseInt(transaction.new_shares_authorized);
+    console.log('Processing issuer adjustment:', {
+        newSharesAuthorized,
+        transaction
+    });
 
     return {
         ...state,
@@ -114,15 +118,9 @@ const processStockClassAdjustment = (state, transaction) => {
 };
 
 // Process equity compensation issuance
-const processEquityCompensationIssuance = (state, transaction) => {
-    // Process for dashboard stats
-    const dashboardState = processEquityCompensationIssuance(state, transaction);
-
-    // Find original stock class data
-    const originalStockClass = stockClasses.find(sc => sc._id === transaction.stock_class_id);
-
-    // Process for captable stats
-    const captableState = processCaptableEquityCompensationIssuance(dashboardState, transaction, originalStockClass);
+const processEquityCompensationIssuance = (state, transaction, stockClass) => {
+    // Only process for captable stats since dashboard doesn't need it
+    const captableState = processCaptableEquityCompensationIssuance(state, transaction, stockClass);
 
     return {
         ...captableState
@@ -132,16 +130,48 @@ const processEquityCompensationIssuance = (state, transaction) => {
 // Process stock plan adjustment
 const processStockPlanAdjustment = (state, transaction) => {
     const { stock_plan_id, shares_reserved } = transaction;
-    return {
+    const newSharesReserved = parseInt(shares_reserved);
+    
+    // Update dashboard state
+    const newState = {
         ...state,
         stockPlans: {
             ...state.stockPlans,
             [stock_plan_id]: {
                 ...state.stockPlans[stock_plan_id],
-                sharesReserved: parseInt(shares_reserved)
+                sharesReserved: newSharesReserved
             }
         }
     };
+
+    // Update captable state
+    const stockPlan = state.stockPlans[stock_plan_id];
+    if (!stockPlan) return newState;
+
+    // Calculate total issued shares for this plan
+    const totalIssuedShares = newState.summary.stockPlans.rows
+        .filter(row => row.name.startsWith(stockPlan.name) && row.name !== 'Available for Grants')
+        .reduce((sum, row) => sum + row.fullyDilutedShares, 0);
+
+    // Update available shares
+    const availableForGrants = newSharesReserved - totalIssuedShares;
+
+    // Update or create "Available for Grants" row
+    const availableRowIndex = newState.summary.stockPlans.rows.findIndex(row => row.name === 'Available for Grants');
+    if (availableRowIndex >= 0) {
+        newState.summary.stockPlans.rows[availableRowIndex].fullyDilutedShares = availableForGrants;
+    } else if (availableForGrants > 0) {
+        newState.summary.stockPlans.rows.push({
+            name: 'Available for Grants',
+            fullyDilutedShares: availableForGrants
+        });
+    }
+
+    // Update total authorized shares in summary
+    newState.summary.stockPlans.totalSharesAuthorized = Object.values(newState.stockPlans)
+        .reduce((sum, plan) => sum + (plan.sharesReserved || 0), 0);
+
+    return newState;
 };
 
 // Process equity compensation exercise

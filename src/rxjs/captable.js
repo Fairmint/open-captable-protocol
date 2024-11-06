@@ -95,22 +95,23 @@ export const processCaptableStockIssuance = (state, transaction, _stakeholder, o
     };
 };
 
-export const captableInitialState = (issuer, stockClasses, _stockPlans, _stakeholders) => {
+export const captableInitialState = (issuer, stockClasses, stockPlans, _stakeholders) => {
     // Calculate initial authorized shares for common and preferred
     const { commonAuthorized, preferredAuthorized } = stockClasses.reduce((acc, sc) => {
+        const authorized = parseInt(sc.initial_shares_authorized || 0);
         if (sc.class_type === StockClassTypes.COMMON) {
-            acc.commonAuthorized += parseInt(sc.initial_shares_authorized);
+            acc.commonAuthorized += authorized;
         } else if (sc.class_type === StockClassTypes.PREFERRED) {
-            acc.preferredAuthorized += parseInt(sc.initial_shares_authorized);
+            acc.preferredAuthorized += authorized;
         }
         return acc;
     }, { commonAuthorized: 0, preferredAuthorized: 0 });
 
-    // Calculate total authorized shares
-    const totalAuthorizedShares = parseInt(issuer.initial_shares_authorized);
+    // Calculate total stock plan shares
+    const totalStockPlanShares = stockPlans.reduce((sum, plan) => 
+        sum + parseInt(plan.initial_shares_reserved || 0), 0);
 
     return {
-        // Captable specific state
         summary: {
             common: {
                 totalSharesAuthorized: commonAuthorized,
@@ -125,11 +126,11 @@ export const captableInitialState = (issuer, stockClasses, _stockPlans, _stakeho
                 rows: []
             },
             stockPlans: {
-                totalSharesAuthorized: 0,
+                totalSharesAuthorized: totalStockPlanShares,
                 rows: []
             },
             totals: {
-                totalAuthorizedShares,
+                totalAuthorizedShares: parseInt(issuer.initial_shares_authorized || 0),
                 totalOutstandingShares: 0,
                 totalFullyDilutedShares: 0,
                 totalFullyPercentage: 0,
@@ -146,5 +147,81 @@ export const captableInitialState = (issuer, stockClasses, _stockPlans, _stakeho
             }
         },
         isCapTableEmpty: true
+    };
+};
+
+export const processCaptableEquityCompensationIssuance = (state, transaction, originalStockClass) => {
+    const { stock_plan_id, quantity, compensation_type } = transaction;
+    const numShares = parseInt(quantity);
+
+    // Early return if stock class not found
+    if (!originalStockClass) {
+        return {
+            ...state,
+            errors: [...state.errors, `Stock class not found for equity compensation issuance`]
+        };
+    }
+
+    // Get stock plan name
+    const stockPlan = state.stockPlans[stock_plan_id];
+    if (!stockPlan) {
+        return {
+            ...state,
+            errors: [...state.errors, `Stock plan not found: ${stock_plan_id}`]
+        };
+    }
+
+    let newSummary = { ...state.summary };
+    const stockPlanSummary = newSummary.stockPlans;
+
+    // Create row name (e.g., "2022 STOCK OPTION/STOCK ISSUANCE PLAN Options")
+    const rowName = `${stockPlan.name} ${compensation_type?.charAt(0).toUpperCase() + compensation_type?.slice(1).toLowerCase() || 'Awards'}`;
+
+    // Find or create row for this plan/type combination
+    const existingRowIndex = stockPlanSummary.rows.findIndex(row => row.name === rowName);
+
+    if (existingRowIndex >= 0) {
+        // Update existing row
+        stockPlanSummary.rows[existingRowIndex] = {
+            ...stockPlanSummary.rows[existingRowIndex],
+            fullyDilutedShares: stockPlanSummary.rows[existingRowIndex].fullyDilutedShares + numShares
+        };
+    } else {
+        // Create new row
+        stockPlanSummary.rows.push({
+            name: rowName,
+            fullyDilutedShares: numShares
+        });
+    }
+
+    // Calculate total issued shares for this plan
+    const totalIssuedShares = stockPlanSummary.rows
+        .filter(row => row.name !== 'Available for Grants')
+        .reduce((sum, row) => sum + row.fullyDilutedShares, 0);
+
+    // Calculate available shares
+    const availableForGrants = stockPlan.sharesReserved - totalIssuedShares;
+
+    // Update or create "Available for Grants" row
+    const availableRowIndex = stockPlanSummary.rows.findIndex(row => row.name === 'Available for Grants');
+    if (availableRowIndex >= 0) {
+        stockPlanSummary.rows[availableRowIndex].fullyDilutedShares = availableForGrants;
+    } else if (availableForGrants > 0) {
+        stockPlanSummary.rows.push({
+            name: 'Available for Grants',
+            fullyDilutedShares: availableForGrants
+        });
+    }
+
+    // Update totals
+    newSummary.totals = {
+        ...newSummary.totals,
+        totalFullyDilutedShares: newSummary.totals.totalFullyDilutedShares + numShares
+    };
+
+    return {
+        ...state,
+        summary: newSummary,
+        isCapTableEmpty: false
     };
 }; 
