@@ -1,0 +1,26 @@
+{
+  "issuerId": "ca45305b-3e00-44a0-91cc-726eae609750",
+  "startedAt": "2024-11-26T18:32:55.094Z",
+  "records": {
+    "ca45305b-3e00-44a0-91cc-726eae609750": true,
+    "2601bc01-c4b7-46bb-b4fb-114dcfd49a82": true,
+    "eb35f1b0-b68d-497a-8f70-7821b4f3e120": true,
+    "9524ca9f-c91f-429d-8c24-5bed11c49f48": true,
+    "c0c2d8e1-1117-4bd1-9114-22623ced9c9f": true,
+    "272a872a-eacd-43de-9177-653aab7e57ad": true,
+    "4c0281db-1ba3-44f1-ac5a-05340332fefb": true,
+    "23daa973-0b8f-4ddf-96ce-8838ecaa0524": true
+  },
+  "errors": [
+    {
+      "error": "Transaction 47114328-1b1f-4151-995d-365817a469de quantity (12) does not match resulting stock issuance quantity (24)\nTransaction 733dc059-1b16-4391-96b2-4c8ae0c36eb6 quantity (12) does not match resulting stock issuance quantity (24)\nTransaction ea8481c0-00a7-43bd-bfb3-6b4ede56448b quantity (8) does not match resulting stock issuance quantity (16)\nTransaction 58638a77-c5ee-4ab5-be9c-0587bea3a23f quantity (8) does not match resulting stock issuance quantity (16)\nTransaction 5c257c72-2ad9-4cf8-bb06-9b289caa3564 quantity (20) does not match resulting stock issuance quantity (40)\nTransaction 97056617-826e-4225-942f-e1ea5d2ba4e3 quantity (20) does not match resulting stock issuance quantity (40)\nTransaction 019aa1da-cc71-43f0-b572-861d7c0666db quantity (8) does not match resulting stock issuance quantity (16)\nTransaction cd1eaa52-8062-4ef0-a8c0-8741da297f15 quantity (8) does not match resulting stock issuance quantity (16)\nTransaction 5345af82-bd08-4076-bba4-ae77c4034ea9 quantity (24) does not match resulting stock issuance quantity (64)\nTransaction 8d0d4f81-6d38-4fea-8777-6bcd390dcfdd quantity (20) does not match resulting stock issuance quantity (64)\nTransaction c6432678-2459-428a-b994-089d4301cfa1 quantity (20) does not match resulting stock issuance quantity (64)\nTransaction 710831b9-d477-408a-b997-1c0429070c64 quantity (12) does not match resulting stock issuance quantity (20)\nTransaction 1db39420-6e39-4998-8906-8fed7d7273ae quantity (8) does not match resulting stock issuance quantity (20)\nTransaction 1cab21e2-6d8e-40e1-9e5a-4983266da1ea quantity (20) does not match resulting stock issuance quantity (40)\nTransaction a8cc2ffe-4086-423a-b3a0-8e0fa2aa85d2 quantity (20) does not match resulting stock issuance quantity (40)\nTransaction 12d35af0-51c4-45b8-be04-12b07650d04a quantity (5) does not match resulting stock issuance quantity (20)",
+      "timestamp": "2024-11-26T18:36:08.693Z"
+    },
+    {
+      "error": "TX_EQUITY_COMPENSATION_EXERCISE - 47114328-1b1f-4151-995d-365817a469de quantity (12) does not match resulting stock issuance quantity (24)\nTX_EQUITY_COMPENSATION_EXERCISE - 733dc059-1b16-4391-96b2-4c8ae0c36eb6 quantity (12) does not match resulting stock issuance quantity (24)\nTX_EQUITY_COMPENSATION_EXERCISE - ea8481c0-00a7-43bd-bfb3-6b4ede56448b quantity (8) does not match resulting stock issuance quantity (16)\nTX_EQUITY_COMPENSATION_EXERCISE - 58638a77-c5ee-4ab5-be9c-0587bea3a23f quantity (8) does not match resulting stock issuance quantity (16)\nTX_EQUITY_COMPENSATION_EXERCISE - 5c257c72-2ad9-4cf8-bb06-9b289caa3564 quantity (20) does not match resulting stock issuance quantity (40)\nTX_EQUITY_COMPENSATION_EXERCISE - 97056617-826e-4225-942f-e1ea5d2ba4e3 quantity (20) does not match resulting stock issuance quantity (40)\nTX_EQUITY_COMPENSATION_EXERCISE - 019aa1da-cc71-43f0-b572-861d7c0666db quantity (8) does not match resulting stock issuance quantity (16)\nTX_EQUITY_COMPENSATION_EXERCISE - cd1eaa52-8062-4ef0-a8c0-8741da297f15 quantity (8) does not match resulting stock issuance quantity (16)\nTX_EQUITY_COMPENSATION_EXERCISE - 5345af82-bd08-4076-bba4-ae77c4034ea9 quantity (24) does not match resulting stock issuance quantity (64)\nTX_EQUITY_COMPENSATION_EXERCISE - 8d0d4f81-6d38-4fea-8777-6bcd390dcfdd quantity (20) does not match resulting stock issuance quantity (64)\nTX_EQUITY_COMPENSATION_EXERCISE - c6432678-2459-428a-b994-089d4301cfa1 quantity (20) does not match resulting stock issuance quantity (64)\nTX_EQUITY_COMPENSATION_EXERCISE - 710831b9-d477-408a-b997-1c0429070c64 quantity (12) does not match resulting stock issuance quantity (20)\nTX_EQUITY_COMPENSATION_EXERCISE - 1db39420-6e39-4998-8906-8fed7d7273ae quantity (8) does not match resulting stock issuance quantity (20)\nTX_EQUITY_COMPENSATION_EXERCISE - 1cab21e2-6d8e-40e1-9e5a-4983266da1ea quantity (20) does not match resulting stock issuance quantity (40)\nTX_EQUITY_COMPENSATION_EXERCISE - a8cc2ffe-4086-423a-b3a0-8e0fa2aa85d2 quantity (20) does not match resulting stock issuance quantity (40)\nTX_EQUITY_COMPENSATION_EXERCISE - 12d35af0-51c4-45b8-be04-12b07650d04a quantity (5) does not match resulting stock issuance quantity (20)",
+      "timestamp": "2024-11-26T18:38:01.211Z"
+    }
+  ],
+  "address": "0x6F1216D1BFe15c98520CA1434FC1d9D57AC95321",
+  "deployHash": "0xf65dfbee2271b663e0de6dfbda171ae1cfa4ac23007ca2e1c92d2db9816c054d"
+}
