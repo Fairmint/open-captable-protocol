@@ -1,9 +1,13 @@
 import express, { json, urlencoded } from "express";
 import { setupEnv } from "./utils/env.js";
 import { connectDB } from "./db/config/mongoose.ts";
-import { startListener } from "./utils/websocket.ts";
-import { setTag } from "@sentry/node";
 import * as Sentry from "@sentry/node";
+import { setTag } from "@sentry/node";
+import { chainMiddleware, contractMiddleware, transactionMiddleware } from "./middleware/chainMiddleware.js";
+import { providerFactory } from "./chain-operations/providerFactory.js";
+import { contractManager } from "./chain-operations/contractManager.js";
+import { multiChainListener } from "./utils/multiChainListener.js";
+import Issuer from "./db/objects/Issuer.js";
 
 // Routes
 import historicalTransactions from "./routes/historicalTransactions.js";
@@ -20,11 +24,9 @@ import statsRoutes from "./routes/stats/index.js";
 import exportRoutes from "./routes/export.js";
 import ocfRoutes from "./routes/ocf.js";
 
-import { readAllIssuers, readIssuerById } from "./db/operations/read.js";
-import { contractCache } from "./utils/simple_caches.js";
-import { getContractInstance } from "./chain-operations/getContractInstances.js";
-
 setupEnv();
+
+// Initialize Sentry
 Sentry.init({
     integrations: [Sentry.captureConsoleIntegration({ levels: ["error"] })],
     dsn: process.env.SENTRY_DSN,
@@ -33,96 +35,84 @@ Sentry.init({
 });
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-const PORT = process.env.PORT;
-const CHAIN = process.env.CHAIN;
-
-// Middlewares
-const chainMiddleware = (req, res, next) => {
-    req.chain = CHAIN;
-    next();
-};
-
-// Middleware to get or create contract instance
-// the listener is first started on deployment, then here as a backup
-const contractMiddleware = async (req, res, next) => {
-    if (!req.body.issuerId) {
-        console.log("❌ | No issuer ID");
-        return res.status(400).send("issuerId is required");
-    }
-
-    // fetch issuer to ensure it exists
-    const issuer = await readIssuerById(req.body.issuerId);
-    if (!issuer || !issuer.id) return res.status(404).send("issuer not found ");
-
-    // Check if contract instance already exists in cache
-    if (!contractCache[req.body.issuerId]) {
-        const contract = await getContractInstance(issuer.deployed_to);
-        contractCache[req.body.issuerId] = { contract };
-    }
-
-    setTag("issuerId", req.body.issuerId);
-    req.contract = contractCache[req.body.issuerId].contract;
-    next();
-};
-
+// Middleware
 app.use(urlencoded({ limit: "50mb", extended: true }));
 app.use(json({ limit: "50mb" }));
 app.enable("trust proxy");
 
-app.use("/", chainMiddleware, mainRoutes);
-app.use("/issuer", chainMiddleware, issuerRoutes);
-app.use("/stakeholder", contractMiddleware, stakeholderRoutes);
-app.use("/stock-class", contractMiddleware, stockClassRoutes);
-
-// No middleware required since these are only created offchain
+// Chain-aware routes
+app.use("/", mainRoutes);
+app.use("/issuer", issuerRoutes);
+app.use("/stakeholder", contractMiddleware, transactionMiddleware, stakeholderRoutes);
+app.use("/stock-class", contractMiddleware, transactionMiddleware, stockClassRoutes);
 app.use("/stock-legend", stockLegendRoutes);
-app.use("/stock-plan", contractMiddleware, stockPlanRoutes);
+app.use("/stock-plan", contractMiddleware, transactionMiddleware, stockPlanRoutes);
 app.use("/valuation", valuationRoutes);
 app.use("/vesting-terms", vestingTermsRoutes);
 app.use("/historical-transactions", historicalTransactions);
 app.use("/stats", statsRoutes);
 app.use("/export", exportRoutes);
 app.use("/ocf", ocfRoutes);
+app.use("/transactions", contractMiddleware, transactionMiddleware, transactionRoutes);
 
-// transactions
-app.use("/transactions/", contractMiddleware, transactionRoutes);
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    Sentry.captureException(err);
+    res.status(500).json({
+        error: 'Internal server error',
+        details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+});
 
 const startServer = async () => {
-    // Connect to MongoDB
-    console.log("Connecting to MongoDB...");
-    await connectDB();
-    console.log("Connected to MongoDB");
+    try {
+        // Connect to MongoDB
+        console.log("Connecting to MongoDB...");
+        await connectDB();
+        console.log("Connected to MongoDB");
 
-    app.listen(PORT, async () => {
-        console.log(`🚀  Server successfully launched at:${PORT}`);
-
-        const issuers = (await readAllIssuers()) || null;
-        if (issuers) {
-            const contractAddresses = issuers
-                .filter((issuer) => issuer?.deployed_to)
-                .reduce((acc, issuer) => {
-                    acc[issuer.id] = issuer.deployed_to;
-                    return acc;
-                }, {});
-
-            console.log(contractAddresses);
-            console.log("Issuer -> Contract Address");
-            const contractsToWatch = Object.values(contractAddresses);
-            console.log("Watching ", contractsToWatch.length, " Contracts");
-            startListener(contractsToWatch);
+        // Start listening for blockchain events across all chains
+        const issuers = await Issuer.find({ deployment_status: 'deployed' });
+        for (const issuer of issuers) {
+            try {
+                await multiChainListener.startListener(issuer.deployed_to, issuer.chainId);
+                console.log(`Started listener for issuer ${issuer.id} on chain ${issuer.chainId}`);
+            } catch (error) {
+                console.error(`Failed to start listener for issuer ${issuer.id}:`, error);
+                Sentry.captureException(error);
+            }
         }
-    });
-    app.on("error", (err) => {
-        console.error(err);
-        if (err.code === "EADDRINUSE") {
-            console.log(`Port ${PORT} is already in use.`);
-        } else {
-            console.log(err);
-        }
-    });
+
+        // Start server
+        app.listen(PORT, () => {
+            console.log(`🚀 Server successfully launched on port ${PORT}`);
+            console.log(`Environment: ${process.env.NODE_ENV}`);
+        });
+    } catch (error) {
+        console.error("Failed to start server:", error);
+        Sentry.captureException(error);
+        process.exit(1);
+    }
 };
 
-startServer().catch((error) => {
-    console.error("Error starting server:", error);
-});
+// Cleanup on shutdown
+const cleanup = async () => {
+    console.log('Shutting down server...');
+    try {
+        await providerFactory.cleanupAll();
+        contractManager.clearCache();
+        process.exit(0);
+    } catch (error) {
+        console.error('Error during cleanup:', error);
+        process.exit(1);
+    }
+};
+
+process.on('SIGTERM', cleanup);
+process.on('SIGINT', cleanup);
+
+// Start server
+startServer();
