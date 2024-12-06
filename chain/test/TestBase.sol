@@ -51,7 +51,7 @@ contract DiamondTestBase is Test, DeployFactoryScript {
         referenceDiamond = deployInitialFacets(contractOwner);
 
         // Create factory using reference diamond
-        factory = new CapTableFactory(contractOwner, referenceDiamond);
+        factory = new CapTableFactory(referenceDiamond);
 
         // Create a new cap table for testing
         capTable = CapTable(payable(factory.createCapTable(issuerId, issuerInitialSharesAuthorized)));

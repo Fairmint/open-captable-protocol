@@ -30,7 +30,7 @@ contract ManageFacetTest is Test, DeployFactoryScript {
         referenceDiamond = deployInitialFacets(contractOwner);
 
         // Create factory using reference diamond
-        factory = new CapTableFactory(contractOwner, referenceDiamond);
+        factory = new CapTableFactory(referenceDiamond);
 
         // Create a new cap table for testing
         capTable = factory.createCapTable(bytes16(uint128(1)), 1_000_000);

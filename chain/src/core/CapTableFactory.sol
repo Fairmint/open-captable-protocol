@@ -16,23 +16,20 @@ import { WarrantFacet } from "@facets/WarrantFacet.sol";
 import { StakeholderNFTFacet } from "@facets/StakeholderNFTFacet.sol";
 import { AccessControlFacet } from "@facets/AccessControlFacet.sol";
 import { AccessControl } from "@libraries/AccessControl.sol";
+import { Ownable } from "openzeppelin-contracts/contracts/access/Ownable.sol";
 import "forge-std/console.sol";
 
-contract CapTableFactory {
+contract CapTableFactory is Ownable {
     event CapTableCreated(address indexed capTable, bytes16 indexed issuerId);
-
-    address public newAdmin; // new admin to transfer ownership to
 
     address[] public capTables;
 
     // Reference diamond to copy facets from
     address public immutable referenceDiamond;
 
-    constructor(address _newAdmin, address _referenceDiamond) {
-        require(_newAdmin != address(0), "Invalid new admin");
+    constructor(address _referenceDiamond) {
         require(_referenceDiamond != address(0), "Invalid referenceDiamond");
         referenceDiamond = _referenceDiamond;
-        newAdmin = _newAdmin;
     }
 
     function createCapTable(bytes16 id, uint256 initialSharesAuthorized) external returns (address) {
@@ -101,23 +98,15 @@ contract CapTableFactory {
         capTables.push(address(diamond));
 
         emit CapTableCreated(address(diamond), id);
-        console.log("newAdmin: ", newAdmin);
         console.log("msg.sender: ", msg.sender);
         console.log("address(this): ", address(this));
 
         // Only transfer admin if newAdmin is not the same as msg.sender
-        AccessControlFacet(address(diamond)).transferAdmin(newAdmin);
+        AccessControlFacet(address(diamond)).transferAdmin(msg.sender);
         return address(diamond);
     }
 
     function getCapTableCount() external view returns (uint256) {
         return capTables.length;
-    }
-
-    // Only factory admin can change the new admin address
-    function setNewAdmin(address _newAdmin) external {
-        require(_newAdmin != address(0), "Invalid new admin");
-        // Add access control if needed
-        newAdmin = _newAdmin;
     }
 }
