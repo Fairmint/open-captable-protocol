@@ -5,7 +5,12 @@ import "./TestBase.sol";
 import { StorageLib } from "@core/Storage.sol";
 import { TxHelper, TxType } from "@libraries/TxHelper.sol";
 import { ValidationLib } from "@libraries/ValidationLib.sol";
-import { EquityCompensationActivePosition, StockActivePosition } from "@libraries/Structs.sol";
+import {
+    EquityCompensationActivePosition,
+    StockActivePosition,
+    StockIssuanceParams,
+    EquityCompensationIssuanceParams
+} from "@libraries/Structs.sol";
 
 contract DiamondEquityCompExerciseTest is DiamondTestBase {
     bytes16 stakeholderId;
@@ -41,60 +46,64 @@ contract DiamondEquityCompExerciseTest is DiamondTestBase {
 
         // Issue equity compensation
         equityCompSecurityId = 0xd3373e0a4dd940000000000000000001;
-        EquityCompensationFacet(address(capTable)).issueEquityCompensation(
-            stakeholderId,
-            stockClassId,
-            stockPlanId,
-            EQUITY_COMP_QUANTITY,
-            equityCompSecurityId,
-            "ISO", // compensation_type
-            1e18, // exercise_price
-            1e18, // base_price
-            "2025-12-31", // expiration_date
-            "EQCOMP_EX_001", // custom_id
-            "90_DAYS", // termination_exercise_windows_mapping
-            "REG_D" // security_law_exemptions_mapping
-        );
+        EquityCompensationIssuanceParams memory eqCompParams = EquityCompensationIssuanceParams({
+            stakeholder_id: stakeholderId,
+            stock_class_id: stockClassId,
+            stock_plan_id: stockPlanId,
+            quantity: EQUITY_COMP_QUANTITY,
+            security_id: equityCompSecurityId,
+            compensation_type: "ISO",
+            exercise_price: 1e18,
+            base_price: 1e18,
+            expiration_date: "2025-12-31",
+            custom_id: "EQCOMP_EX_001",
+            termination_exercise_windows_mapping: "90_DAYS",
+            security_law_exemptions_mapping: "REG_D"
+        });
+        EquityCompensationFacet(address(capTable)).issueEquityCompensation(eqCompParams);
 
         // Issue resulting stock
-        stockSecurityId = 0xd3373e0a4dd940000000000000000002;
-        StockFacet(address(capTable)).issueStock(
-            stockClassId,
-            1e18, // share price
-            EQUITY_COMP_QUANTITY,
-            stakeholderId,
-            stockSecurityId,
-            "STOCK_EX_001", // custom_id
-            "LEGEND_1", // stock_legend_ids_mapping
-            "REG_D" // security_law_exemptions_mapping
-        );
+        bytes16 securityId1 = bytes16(keccak256("security1"));
+        StockIssuanceParams memory params = StockIssuanceParams({
+            stock_class_id: stockClassId,
+            share_price: 1e18,
+            quantity: EQUITY_COMP_QUANTITY,
+            stakeholder_id: stakeholderId,
+            security_id: securityId1,
+            custom_id: "STOCK_EX_001",
+            stock_legend_ids_mapping: "LEGEND_1",
+            security_law_exemptions_mapping: "REG_D"
+        });
+        StockFacet(address(capTable)).issueStock(params);
+        stockSecurityId = securityId1;
     }
 
     function testExerciseEquityCompensation() public {
         uint256 exerciseQuantity = 500;
 
         // Issue new stock position with exact quantity to exercise
-        bytes16 newStockSecurityId = 0xd3373e0a4dd940000000000000000003;
-        StockFacet(address(capTable)).issueStock(
-            stockClassId,
-            1e18, // share price
-            exerciseQuantity, // Must match exercise quantity
-            stakeholderId,
-            newStockSecurityId,
-            "STOCK_EX_002",
-            "LEGEND_1",
-            "REG_D"
-        );
+        bytes16 securityId2 = bytes16(keccak256("security2"));
+        StockIssuanceParams memory params2 = StockIssuanceParams({
+            stock_class_id: stockClassId,
+            share_price: 1e18,
+            quantity: exerciseQuantity,
+            stakeholder_id: stakeholderId,
+            security_id: securityId2,
+            custom_id: "STOCK_EX_002",
+            stock_legend_ids_mapping: "LEGEND_1",
+            security_law_exemptions_mapping: "REG_D"
+        });
+        StockFacet(address(capTable)).issueStock(params2);
 
         vm.expectEmit(true, true, false, true, address(capTable));
         emit TxHelper.TxCreated(
-            TxType.EQUITY_COMPENSATION_EXERCISE, abi.encode(equityCompSecurityId, newStockSecurityId, exerciseQuantity)
+            TxType.EQUITY_COMPENSATION_EXERCISE, abi.encode(equityCompSecurityId, securityId2, exerciseQuantity)
         );
 
         // Exercise as stakeholder
         vm.prank(stakeholderWallet);
         EquityCompensationFacet(address(capTable)).exerciseEquityCompensation(
-            equityCompSecurityId, newStockSecurityId, exerciseQuantity
+            equityCompSecurityId, securityId2, exerciseQuantity
         );
 
         // Verify equity comp position was updated
@@ -144,25 +153,22 @@ contract DiamondEquityCompExerciseTest is DiamondTestBase {
         bytes16 otherStakeholderId = createStakeholder();
 
         // Issue stock to different stakeholder
-        bytes16 otherStockSecurityId = 0xd3373e0a4dd940000000000000000003;
-        StockFacet(address(capTable)).issueStock(
-            stockClassId,
-            1e18, // share price
-            500,
-            otherStakeholderId,
-            otherStockSecurityId,
-            "STOCK_EX_003",
-            "LEGEND_1",
-            "REG_D"
-        );
+        bytes16 securityId3 = bytes16(keccak256("security3"));
+        StockIssuanceParams memory params3 = StockIssuanceParams({
+            stock_class_id: stockClassId,
+            share_price: 1e18,
+            quantity: 500,
+            stakeholder_id: otherStakeholderId,
+            security_id: securityId3,
+            custom_id: "STOCK_EX_003",
+            stock_legend_ids_mapping: "LEGEND_1",
+            security_law_exemptions_mapping: "REG_D"
+        });
+        StockFacet(address(capTable)).issueStock(params3);
 
         vm.expectRevert(
-            abi.encodeWithSelector(
-                ValidationLib.InvalidSecurityStakeholder.selector, otherStockSecurityId, stakeholderId
-            )
+            abi.encodeWithSelector(ValidationLib.InvalidSecurityStakeholder.selector, securityId3, stakeholderId)
         );
-        EquityCompensationFacet(address(capTable)).exerciseEquityCompensation(
-            equityCompSecurityId, otherStockSecurityId, 500
-        );
+        EquityCompensationFacet(address(capTable)).exerciseEquityCompensation(equityCompSecurityId, securityId3, 500);
     }
 }

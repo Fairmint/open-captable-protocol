@@ -20,7 +20,6 @@ contract AccessControlFacet is AccessControlUpgradeable {
     function initializeAccessControl() external {
         Storage storage ds = StorageLib.get();
 
-        // Set up admin role for the deployer (factory)
         ds.roles[DEFAULT_ADMIN_ROLE][msg.sender] = true;
         ds.currentAdmin = msg.sender; // Set initial admin
         emit RoleGranted(DEFAULT_ADMIN_ROLE, msg.sender, msg.sender);

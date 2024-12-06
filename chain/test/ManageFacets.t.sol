@@ -23,30 +23,19 @@ contract ManageFacetTest is Test, DeployFactoryScript {
 
     function setUp() public {
         console.log("starting setUp");
-        contractOwner = address(this);
-        console.log("contractOwner: ", contractOwner);
+        contractOwner = makeAddr("owner");
+        vm.startPrank(contractOwner);
 
-        // Use the deployment script's function
+        // Deploy reference diamond with contract owner as owner
         referenceDiamond = deployInitialFacets(contractOwner);
 
-        // Create factory using reference diamond
-        factory = new CapTableFactory(contractOwner, referenceDiamond);
+        // Create factory using reference diamond - owned by contractOwner
+        factory = new CapTableFactory(referenceDiamond);
 
-        // Create a new cap table for testing
+        // Create cap tables - both owned by contractOwner through factory
         capTable = factory.createCapTable(bytes16(uint128(1)), 1_000_000);
-        console.log("capTable: ", capTable);
-        console.log("referenceDiamond: ", referenceDiamond);
-
-        // Create a second cap table for testing
         capTable2 = factory.createCapTable(bytes16(uint128(2)), 1_000_000);
-        console.log("capTable2: ", capTable2);
 
-        // Transfer ownership of capTable to the test contract
-        vm.startPrank(contractOwner);
-        // The contract owner should be this test contract, not the diamond itself
-        LibDiamond.setContractOwner(referenceDiamond);
-        LibDiamond.setContractOwner(capTable);
-        LibDiamond.setContractOwner(capTable2);
         vm.stopPrank();
 
         mockFacet = new MockFacet();

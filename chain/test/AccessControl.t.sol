@@ -10,6 +10,7 @@ import { EquityCompensationFacet } from "@facets/EquityCompensationFacet.sol";
 import { StakeholderNFTFacet } from "@facets/StakeholderNFTFacet.sol";
 import { StakeholderFacet } from "@facets/StakeholderFacet.sol";
 import { StockPlanFacet } from "@facets/StockPlanFacet.sol";
+import { StockIssuanceParams, EquityCompensationIssuanceParams } from "@libraries/Structs.sol";
 
 contract AccessControlTest is DiamondTestBase {
     address admin;
@@ -26,13 +27,13 @@ contract AccessControlTest is DiamondTestBase {
         investor = address(0x3);
         unauthorized = address(0x4);
 
-        // contract owner is the FACTORY
+        // contractOwner (factory owner) transfers admin role
         vm.startPrank(contractOwner);
         AccessControlFacet(address(capTable)).grantRole(AccessControl.DEFAULT_ADMIN_ROLE, admin);
         AccessControlFacet(address(capTable)).transferAdmin(admin);
         vm.stopPrank();
 
-        // Now have admin accept the role
+        // Admin accepts and sets up other roles
         vm.startPrank(admin);
         AccessControlFacet(address(capTable)).acceptAdmin();
         AccessControlFacet(address(capTable)).grantRole(AccessControl.OPERATOR_ROLE, operator);
@@ -61,38 +62,41 @@ contract AccessControlTest is DiamondTestBase {
         // Create a stakeholder and stock class first
         bytes16 stakeholderId = createStakeholder();
         bytes16 stockClassId = createStockClass();
+        bytes16 securityId = bytes16(keccak256("security1"));
 
         // Test issueStock with operator role
         vm.startPrank(operator);
-        StockFacet(address(capTable)).issueStock(
-            stockClassId, // stock_class_id
-            1, // share_price
-            100, // quantity
-            stakeholderId, // stakeholder_id
-            bytes16(keccak256("security1")), // security_id
-            "custom_id", // custom_id
-            "stock_legend_ids_mapping", // stock_legend_ids_mapping
-            "security_law_exemptions_mapping" // security_law_exemptions_mapping
-        );
+        StockIssuanceParams memory params = StockIssuanceParams({
+            stock_class_id: stockClassId,
+            share_price: 10_000_000_000,
+            quantity: 1000,
+            stakeholder_id: stakeholderId,
+            security_id: securityId,
+            custom_id: "STOCK_001",
+            stock_legend_ids_mapping: "LEGEND_1",
+            security_law_exemptions_mapping: "REG_D"
+        });
+        StockFacet(address(capTable)).issueStock(params);
         vm.stopPrank();
 
         // Test unauthorized access
         vm.startPrank(investor);
+        StockIssuanceParams memory params2 = StockIssuanceParams({
+            stock_class_id: stockClassId,
+            share_price: 10_000_000_000,
+            quantity: 1000,
+            stakeholder_id: stakeholderId,
+            security_id: securityId,
+            custom_id: "STOCK_002",
+            stock_legend_ids_mapping: "LEGEND_1",
+            security_law_exemptions_mapping: "REG_D"
+        });
         vm.expectRevert(
             abi.encodeWithSelector(
                 AccessControl.AccessControlUnauthorized.selector, investor, AccessControl.OPERATOR_ROLE
             )
         );
-        StockFacet(address(capTable)).issueStock(
-            stockClassId, // stock_class_id
-            1, // share_price
-            100, // quantity
-            stakeholderId, // stakeholder_id
-            bytes16(keccak256("security2")), // security_id
-            "custom_id", // custom_id
-            "stock_legend_ids_mapping", // stock_legend_ids_mapping
-            "security_law_exemptions_mapping" // security_law_exemptions_mapping
-        );
+        StockFacet(address(capTable)).issueStock(params2);
         vm.stopPrank();
     }
 
@@ -119,43 +123,45 @@ contract AccessControlTest is DiamondTestBase {
 
         // Test issueEquityCompensation
         vm.startPrank(operator);
-        EquityCompensationFacet(address(capTable)).issueEquityCompensation(
-            stakeholderId,
-            stockClassId,
-            stockPlanId,
-            100,
-            bytes16(keccak256("security1")),
-            "OPTION",
-            100,
-            100,
-            "2025-01-01",
-            "custom_id",
-            "termination_exercise_windows_mapping",
-            "security_law_exemptions_mapping"
-        );
+        EquityCompensationIssuanceParams memory params = EquityCompensationIssuanceParams({
+            stakeholder_id: stakeholderId,
+            stock_class_id: stockClassId,
+            stock_plan_id: stockPlanId,
+            quantity: 100,
+            security_id: bytes16(keccak256("security1")),
+            compensation_type: "OPTION",
+            exercise_price: 1e18,
+            base_price: 1e18,
+            expiration_date: "2025-01-01",
+            custom_id: "EQCOMP_001",
+            termination_exercise_windows_mapping: "90_DAYS",
+            security_law_exemptions_mapping: "REG_D"
+        });
+        EquityCompensationFacet(address(capTable)).issueEquityCompensation(params);
         vm.stopPrank();
 
         // Test unauthorized access
         vm.startPrank(investor);
+        EquityCompensationIssuanceParams memory params2 = EquityCompensationIssuanceParams({
+            stakeholder_id: stakeholderId,
+            stock_class_id: stockClassId,
+            stock_plan_id: stockPlanId,
+            quantity: 100,
+            security_id: bytes16(keccak256("security2")),
+            compensation_type: "OPTION",
+            exercise_price: 1e18,
+            base_price: 1e18,
+            expiration_date: "2025-01-01",
+            custom_id: "EQCOMP_002",
+            termination_exercise_windows_mapping: "90_DAYS",
+            security_law_exemptions_mapping: "REG_D"
+        });
         vm.expectRevert(
             abi.encodeWithSelector(
                 AccessControl.AccessControlUnauthorized.selector, investor, AccessControl.OPERATOR_ROLE
             )
         );
-        EquityCompensationFacet(address(capTable)).issueEquityCompensation(
-            stakeholderId,
-            stockClassId,
-            stockPlanId,
-            100,
-            bytes16(keccak256("security2")),
-            "OPTION",
-            100,
-            100,
-            "2025-01-01",
-            "custom_id",
-            "termination_exercise_windows_mapping",
-            "security_law_exemptions_mapping"
-        );
+        EquityCompensationFacet(address(capTable)).issueEquityCompensation(params2);
         vm.stopPrank();
     }
 
