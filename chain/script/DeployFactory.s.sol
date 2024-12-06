@@ -207,7 +207,7 @@ contract DeployFactoryScript is Script {
         console.log("-------------------------------------------------");
 
         // Deploy factory with facet addresses
-        CapTableFactory factory = new CapTableFactory(deployer, referenceDiamond);
+        CapTableFactory factory = new CapTableFactory(referenceDiamond);
 
         address capTable = factory.createCapTable(bytes16("TEST"), 1_000_000);
         console.log("\nCapTableFactory deployed at:", address(factory));
@@ -241,7 +241,7 @@ contract DeployFactoryScript is Script {
             revert("Missing REFERENCE_DIAMOND in .env");
         }
         // Deploy factory with facet addresses
-        CapTableFactory factory = new CapTableFactory(deployer, referenceDiamond);
+        CapTableFactory factory = new CapTableFactory(referenceDiamond);
 
         console.log("\nCapTableFactory deployed at:", address(factory));
 
