@@ -118,6 +118,7 @@ const startServer = async () => {
                 .map((issuer) => ({
                     address: issuer.deployed_to,
                     chain_id: issuer.chain_id,
+                    name: issuer.legal_name,
                 }));
 
             console.log("Watching contracts by chain:");
@@ -125,6 +126,9 @@ const startServer = async () => {
                 acc[contract.chain_id] = (acc[contract.chain_id] || 0) + 1;
                 return acc;
             }, {});
+            Object.entries(contractsToWatch).forEach(([_ /*id*/, data]) => {
+                console.log(`${data.name.padEnd(32)} -> ${data.address}`);
+            });
 
             Object.entries(contractsByChain).forEach(([chainId, count]) => {
                 console.log(`Chain ${chainId}: ${count} contracts`);
