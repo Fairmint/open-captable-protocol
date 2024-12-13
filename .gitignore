@@ -39,5 +39,4 @@ tsconfig.tsbuildinfo
 .env.*
 chain/out
 chain/lib/*
-
-.windsurf
+solana/*
