@@ -74,33 +74,69 @@ export const processCaptableStockIssuance = (state, transaction, _stakeholder, o
     return { summary: newSummary };
 };
 
-export const captableInitialState = () => {
-    // Initialize sections with empty rows
+export const processStakeholderView = (state, transaction, stakeholder) => {
+    if (!stakeholder) return state;
+
+    const stakeholderId = stakeholder._id.toString();
+    let stakeholderView = state.stakeholderView || {};
+    let stakeholderData = stakeholderView[stakeholderId] || {
+        name: stakeholder.name?.legal_name || "Unknown Stakeholder",
+        stock: 0,
+        convertibles: 0,
+        equityComp: 0,
+        warrant: 0,
+    };
+
+    // Process based on transaction type
+    switch (transaction.object_type) {
+        case "TX_STOCK_ISSUANCE":
+            stakeholderData.stock += parseInt(transaction.quantity) || 0;
+            break;
+        case "TX_CONVERTIBLE_ISSUANCE":
+            stakeholderData.convertibles += Number(transaction.investment_amount?.amount || 0);
+            break;
+        case "TX_EQUITY_COMPENSATION_ISSUANCE":
+            stakeholderData.equityComp += parseInt(transaction.quantity) || 0;
+            break;
+        case "TX_WARRANT_ISSUANCE":
+            stakeholderData.warrant += parseInt(transaction.quantity) || 0;
+            break;
+    }
+
     return {
-        summary: {
-            common: {
-                rows: [],
-            },
-            preferred: {
-                rows: [],
-            },
-            founderPreferred: null,
-            warrantsAndNonPlanAwards: {
-                rows: [],
-            },
-            stockPlans: {
-                rows: [],
-            },
-            totals: {}, // Empty totals object - will be calculated in index.js
+        ...state,
+        stakeholderView: {
+            ...stakeholderView,
+            [stakeholderId]: stakeholderData,
         },
-        convertibles: {
-            isEmpty: true,
-            convertiblesSummary: {},
-            totals: {},
-        },
-        isCapTableEmpty: true,
     };
 };
+
+export const captableInitialState = () => ({
+    summary: {
+        common: {
+            rows: [],
+        },
+        preferred: {
+            rows: [],
+        },
+        founderPreferred: null,
+        warrantsAndNonPlanAwards: {
+            rows: [],
+        },
+        stockPlans: {
+            rows: [],
+        },
+        totals: {},
+    },
+    convertibles: {
+        isEmpty: true,
+        convertiblesSummary: {},
+        totals: {},
+    },
+    stakeholderView: {},
+    isCapTableEmpty: true,
+});
 
 export const processCaptableStockClassAdjustment = (state, transaction, originalStockClass) => {
     const { stock_class_id } = transaction;
