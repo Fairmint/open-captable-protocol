@@ -70,6 +70,7 @@ const createInitialState = (issuer, stockClasses, stockPlans, stakeholders) => {
         ...captableState, // Add captable specific state
         transactions: [], // Reset transactions array
         errors, // Reset errors array
+        stakeholderView: {}, // Add stakeholder view
     };
 };
 
@@ -148,6 +149,9 @@ const processTransaction = (state, transaction, stakeholders, stockClasses, stoc
         };
     }
 
+    const stakeholderView = processStakeholderView(newState, transaction, stakeholder, originalStockClass, originalStockPlan);
+    newState.stakeholderView = stakeholderView;
+
     switch (transaction.object_type) {
         case "TX_STOCK_ISSUANCE":
             return processStockIssuance(newState, transaction, stakeholder, originalStockClass);
@@ -172,6 +176,102 @@ const processTransaction = (state, transaction, stakeholders, stockClasses, stoc
         default:
             return state;
     }
+};
+
+const processStakeholderView = (state, transaction, stakeholder, originalStockClass, originalStockPlan) => {
+    if (!stakeholder) return state.stakeholderView || {};
+
+    const stakeholderId = stakeholder._id.toString();
+    let stakeholderView = state.stakeholderView || {};
+    let stakeholderData = stakeholderView[stakeholderId] || {
+        name: stakeholder.name?.legal_name || "Unknown Stakeholder",
+        relationship: stakeholder.current_relationship || "Unknown",
+        stock: {
+            total: 0,
+            breakdown: {
+                common: 0,
+                preferred: 0,
+            },
+        },
+        convertibles: {
+            total: 0,
+            breakdown: {
+                safes: {
+                    pre_money: 0,
+                    post_money: 0,
+                },
+                notes: 0,
+            },
+        },
+        equityComp: {
+            total: 0,
+            breakdown: {
+                plan: {}, // Will be populated with plan names as keys
+                non_plan: {
+                    options: 0,
+                    rsus: 0,
+                },
+            },
+        },
+        warrant: {
+            total: 0,
+            breakdown: {
+                with_stock_class: 0, // Warrants that convert to specific stock class
+                convertible: 0, // Warrants in convertibles section
+            },
+        },
+    };
+
+    // Process based on transaction type
+    let quantity, stockType, amount, convertibleType, safeType, compType, hasStockClass;
+    switch (transaction.object_type) {
+        case "TX_STOCK_ISSUANCE":
+            quantity = parseInt(transaction.quantity) || 0;
+            stockType = originalStockClass?.class_type?.toUpperCase() || "COMMON";
+            stakeholderData.stock.total += quantity;
+            stakeholderData.stock.breakdown[stockType.toLowerCase()] += quantity;
+            break;
+        case "TX_CONVERTIBLE_ISSUANCE":
+            amount = Number(transaction.investment_amount?.amount || 0);
+            convertibleType = transaction.convertible_type?.toUpperCase() || "OTHER";
+            stakeholderData.convertibles.total += amount;
+
+            if (convertibleType === "SAFE") {
+                safeType = transaction.safe_type?.toLowerCase() === "post_money" ? "post_money" : "pre_money";
+                stakeholderData.convertibles.breakdown.safes[safeType] += amount;
+            } else if (convertibleType === "NOTE") {
+                stakeholderData.convertibles.breakdown.notes += amount;
+            }
+            break;
+        case "TX_EQUITY_COMPENSATION_ISSUANCE":
+            quantity = parseInt(transaction.quantity) || 0;
+            compType = transaction.compensation_type?.toLowerCase() || "options";
+
+            if (transaction.stock_plan_id) {
+                const planName = originalStockPlan?.plan_name || "Unknown Plan";
+                stakeholderData.equityComp.breakdown.plan[planName] = stakeholderData.equityComp.breakdown.plan[planName] || { options: 0, rsus: 0 };
+                stakeholderData.equityComp.breakdown.plan[planName][compType] += quantity;
+            } else {
+                stakeholderData.equityComp.breakdown.non_plan[compType] += quantity;
+            }
+            stakeholderData.equityComp.total += quantity;
+            break;
+        case "TX_WARRANT_ISSUANCE":
+            quantity = parseInt(transaction.quantity) || 0;
+            hasStockClass = transaction.exercise_triggers?.[0]?.conversion_right?.converts_to_stock_class_id;
+            stakeholderData.warrant.total += quantity;
+            if (hasStockClass) {
+                stakeholderData.warrant.breakdown.with_stock_class += quantity;
+            } else {
+                stakeholderData.warrant.breakdown.convertible += quantity;
+            }
+            break;
+    }
+
+    return {
+        ...stakeholderView,
+        [stakeholderId]: stakeholderData,
+    };
 };
 
 // Process convertible issuance
@@ -485,6 +585,7 @@ export const captableStats = async ({ issuer, stockClasses, stockPlans, stakehol
                     outstandingAmount: 0,
                 },
             },
+            stakeholderView: {},
         };
     }
 
@@ -498,6 +599,7 @@ export const captableStats = async ({ issuer, stockClasses, stockPlans, stakehol
             tap((state) => {
                 const stateWithoutTransactions = { ...state };
                 delete stateWithoutTransactions.transactions;
+
                 // console.log("\nProcessed transaction. New state:", JSON.stringify(stateWithoutTransactions, null, 2));
             }),
             map((state) => {
@@ -506,6 +608,7 @@ export const captableStats = async ({ issuer, stockClasses, stockPlans, stakehol
                     console.error("Errors found in state:", Array.from(state.errors));
                     return state;
                 }
+
                 // Just maintain section structures without calculating totals yet
                 const commonSummary = {
                     rows: state.summary.common.rows,
@@ -647,12 +750,12 @@ export const captableStats = async ({ issuer, stockClasses, stockPlans, stakehol
                             outstandingAmount: convertiblesTotalOutstandingAmount,
                         },
                     },
+                    stakeholderView: state.stakeholderView || {},
                 };
             })
         )
     );
 
-    // console.log("finalState", finalState);
     return finalState;
 };
 
