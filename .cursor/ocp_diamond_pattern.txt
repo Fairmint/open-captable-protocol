@@ -1,0 +1,50 @@
+# Arch: OCP Diamond Pattern Implementation
+
+## DP Definition
+# Modular, upgradeable contracts via Facets sharing common Storage. Bypasses 24KB limit. Maintains stable contract address.
+
+## Core Components
+
+Comp:Diamond Contract (CapTable)
+  - Main entry point, deployed per Issuer by `CapTableFactory`.
+  - Delegates function calls to Facets via function selectors map.
+  - Extends `diamond-3-hardhat` base contract.
+
+Comp:Diamond Storage (`Storage.sol`)
+  - Central shared `struct Storage` holding all cap table state.
+  - Accessed by all Facets via `StorageLib.get()` using constant storage slot `keccak256("diamond.storage")`.
+  - Struct:Storage Flds: roles:map(b32=>map(addr=>bool)), roleAdmin:map(b32=>b32), currentAdmin:addr, pendingAdmin:addr, issuer:Issuer, stakeholders:b16[], stakeholderIndex:map(b16=>u256), stockClasses:StockClass[], stockClassIndex:map(b16=>u256), stockPlans:StockPlan[], stockPlanIndex:map(b16=>u256), stockActivePositions:StockActivePositions, convertibleActivePositions:ConvertibleActivePositions, equityCompensationActivePositions:EquityCompensationActivePositions, warrantActivePositions:WarrantActivePositions, addressToStakeholderId:map(addr=>b16) # (See OCP Data Model for struct details)
+
+Comp:Facets (Implementation Contracts)
+  - Fac:AccessControlFacet # Manages roles/permissions
+  - Fac:IssuerFacet # Issuer ops
+  - Fac:StakeholderFacet # Stakeholder ops
+  - Fac:StockClassFacet # Stock Class ops
+  - Fac:StockFacet # Stock Tx ops (issuance, transfer, etc.)
+  - Fac:StockPlanFacet # Stock Plan ops
+  - Fac:EquityCompensationFacet # Equity Comp ops (issuance, exercise)
+  - Fac:ConvertiblesFacet # Convertible ops
+  - Fac:WarrantFacet # Warrant ops
+  - Fac:StakeholderNFTFacet # NFT representation ops
+
+## Implementation Details
+
+Impl:Deployment (`CapTableFactory`)
+  - Deploys new `CapTable` instance.
+  - Uses `DiamondCutFacet` (copied from reference diamond) to add function selectors and corresponding Facet addresses to the new `CapTable`.
+  - Initializes `AccessControlFacet` and `IssuerFacet`.
+
+Impl:Function Routing
+  - `CapTable` uses internal lookup (selector => facet address).
+  - Calls target function on Facet using `delegatecall` (operates on Diamond Storage context).
+
+Impl:Upgrades
+  - Use `DiamondCutFacet.diamondCut()` to Add, Replace, or Remove function selectors and their associated Facet implementations.
+  - State in `Storage` is unaffected by Facet upgrades.
+
+Impl:Access Control (`AccessControlFacet`)
+  - Role-based: `ADMIN_ROLE` (full), `OPERATOR_ROLE` (operations), `INVESTOR_ROLE` (limited stakeholder view).
+  - Uses `roles` and `roleAdmin` mappings in `Storage`.
+
+## Advantages (OCP Context)
+# Modularity (logic separation), Upgradability (no data migration), Storage Efficiency (shared state), Gas Optimization (targeted calls), Simplified Interface (per Facet). Enables evolving on-chain cap table.

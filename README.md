@@ -4,9 +4,97 @@
   </a>
 </div>
 
-# Documentation
+# Overview
 
-This repo is based on the [Open Cap Table Coalition](https://github.com/Open-Cap-Table-Coalition/Open-Cap-Format-OCF) standard, with the license included in its entirety.
+The Open Cap Table Protocol (OCP) is a comprehensive solution for managing capitalization tables on the blockchain. It implements the [Open Cap Table Coalition](https://github.com/Open-Cap-Table-Coalition/Open-Cap-Format-OCF) standard, providing a secure, transparent, and standardized way to manage equity ownership and transactions.
+
+## Architecture Overview
+
+OCP consists of two main components:
+
+1. **Smart Contract Layer (Chain)**
+   - Solidity contracts built with Foundry
+   - On-chain representation of cap table data
+   - Secure transaction processing for equity movements
+   - Support for multiple blockchain networks
+
+2. **API Server (Web)**
+   - Express.js-based REST API
+   - MongoDB database for off-chain data storage
+   - WebSocket-based event listeners for blockchain events
+   - OCF standard validation and processing
+
+## Key Features
+
+- **Full OCF Standard Implementation**: Compliant with the Open Cap Table Coalition format
+- **Blockchain Agnostic**: Support for multiple EVM-compatible networks
+- **Comprehensive Data Model**: Complete representation of cap table entities
+- **Real-time Event Monitoring**: WebSocket integration for blockchain events
+- **Data Validation**: Schema validation against the OCF standard
+- **Import/Export Capabilities**: Support for standard file formats
+
+## Documentation
+
+### Prerequisites
+
+- Node.js (version as specified in package.json)
+- MongoDB
+- Anvil (Foundry's local Ethereum node)
+- Forge (Foundry's smart contract development tool)
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Fairmint/open-captable-protocol.git
+   cd open-captable-protocol
+   ```
+
+2. Install dependencies:
+   ```bash
+   yarn install
+   ```
+
+3. Set up environment variables:
+   ```bash
+   cp .env.example .env.dev
+   # Edit .env.dev with your configuration
+   ```
+
+4. Run the setup script:
+   ```bash
+   yarn setup
+   ```
+
+### Running the Cap Table Server
+
+1. Start MongoDB:
+   ```bash
+   docker compose up
+   ```
+
+2. Start the local Ethereum node:
+   ```bash
+   anvil
+   ```
+
+3. Deploy the smart contracts:
+   ```bash
+   yarn deploy:local
+   ```
+
+4. Start the server:
+   ```bash
+   yarn dev
+   ```
+
+### MongoDB Access
+
+Connect to MongoDB using MongoDB Compass with the following connection string:
+
+```sh
+mongodb://ocp:ocp@localhost:27017/mongo?authSource=admin&retryWrites=true&w=majority
+```
 
 ## Contributing
 
@@ -61,7 +149,7 @@ yarn deseed
 
 ### Using sample scripts that call our APIs
 
-In another terminal (ensuring you’re in the root directory) run `node src/scripts/testMintingCapTable.js.` If you navigate to `/scripts` directory, you’ll be able to interact with the sample data.
+In another terminal (ensuring you're in the root directory) run `node src/scripts/testMintingCapTable.js.` If you navigate to `/scripts` directory, you'll be able to interact with the sample data.
 
 ## Debugging Steps
 

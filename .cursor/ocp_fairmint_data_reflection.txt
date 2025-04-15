@@ -1,0 +1,48 @@
+# Sync: OCP <> Fairmint Data Reflection
+
+## Overview
+# Arch: Bidirectional via Webhooks/API. OCP=Source of Truth (MongoDB+Chain), Fairmint=UI/App Layer.
+# Goal: Maintain consistent cap table data across both platforms.
+
+## Key Data Models
+Model(OCP): FairmintSchema Flds:_id:String(UUID), tx_id:String?, series_id:String?, object_type:String?, security_id:String?, stakeholder_id:String?, attributes:Mixed, date:String?, issuer:String(Ref>Issuer) # Links OCP entities to Fairmint records.
+Model(Fairmint): Portal Flds:... captable_minted:Bool ... # Flag in Fairmint DB indicating OCP manages the cap table.
+
+## Core Sync Flows (Trigger -> Systems -> Action/Endpoints)
+
+Flow:Issuer/Portal Creation (OCP Enablement)
+  Trigger: Fairmint Portal created with OCP flag set.
+  Steps: Fairmint -> OCP EP:/issuer/create-fairmint-reflection -> OCP creates Issuer (DB+Chain), creates FairmintSchema link -> OCP -> Fairmint Webhook:/ocp/reflectCaptable -> Fairmint sets portal.captable_minted = true.
+
+Flow:Stakeholder Creation/Reflection
+  Trigger: Fairmint needs OCP stakeholder ID (e.g., first investment/grant for user).
+  Steps: Fairmint -> OCP EP:/stakeholder/create-fairmint-reflection -> OCP creates Stakeholder (DB+Chain), creates FairmintSchema link -> OCP -> Fairmint Webhook:/ocp/reflectStakeholder.
+
+Flow:Investment Sync (Fairmint -> OCP)
+  Trigger: Investment created in Fairmint.
+  Steps: Fairmint determines Security Type -> Fairmint calls OCP EP:/transactions/issuance/[stock|convertible]-fairmint-reflection -> OCP creates Transaction (DB+Chain), updates FairmintSchema link (stores Fairmint investment ID as security_id) -> Fairmint stores OCP security_id on investment record.
+
+Flow:Equity Grant Sync (Fairmint -> OCP)
+  Trigger: Equity Grant created in Fairmint.
+  Steps: Fairmint -> OCP EP:/transactions/issuance/equity-compensation-fairmint-reflection -> OCP creates Transaction (DB+Chain), updates FairmintSchema link (stores Fairmint grant ID as security_id) -> Fairmint stores OCP security_id on grant record.
+
+Flow:Grant Exercise Sync
+  Trigger: Grant exercised in Fairmint.
+  Steps: Fairmint -> OCP EP:/transactions/exercise/equity-compensation-fairmint-reflection -> OCP creates Exercise Tx (DB+Chain) -> OCP -> Fairmint Webhook:/ocp/reflectGrantExercise.
+
+Flow:Cap Table Stats Fetch (Fairmint <- OCP)
+  Trigger: Fairmint UI needs cap table/dashboard data.
+  Steps: Fairmint -> OCP EP:/stats/rxjs/[dashboard|captable] -> OCP returns calculated stats -> Fairmint combines OCP stats with its own data (e.g., SAFE details) -> Display unified view.
+
+## Blockchain Event Handling (OCP -> Fairmint Sync)
+  Trigger: OCP listener detects relevant on-chain event (TxCreated, StakeholderCreated, etc.).
+  Steps: OCP Listener -> OCP updates MongoDB (sets is_onchain_synced=true, tx_hash) -> OCP checks if FairmintSchema link exists -> If yes, OCP -> Fairmint Webhook (e.g., /ocp/reflectStakeholder, /ocp/reflectTx) to notify Fairmint of on-chain confirmation.
+
+## Security / Integrity
+# Verification checks performed by both systems (e.g., check stakeholder exists).
+# Tx Hashes stored in OCP DB for tracing.
+# Error logging for failed syncs.
+
+## Configuration
+# OCP: Env Var `FAIRMINT_API_URL` points to Fairmint API.
+# Fairmint: Env Var `OCP_URL` points to OCP API.

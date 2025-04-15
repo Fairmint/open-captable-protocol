@@ -1,0 +1,15 @@
+# Overview: OCP (Open Cap Table Protocol)
+
+# Purpose: Manage capitalization tables on-chain using Open Cap Table Coalition (OCF) standard. Secure, transparent, standardized equity management.
+
+Arch: Dual Layer
+  1. Smart Contracts (Chain): Solidity/Foundry. On-chain data & tx processing. Multi-chain EVM support.
+  2. API Server (Web): Express.js REST API. MongoDB for off-chain data. WebSocket listeners for chain events. OCF validation.
+
+Feat: Full OCF standard impl, Blockchain agnostic (EVM), Comprehensive data model, Real-time event monitoring (WS), Data validation (OCF), Import/Export.
+
+Docs:
+  Prereq: NodeJS (see package.json), MongoDB, Anvil (Foundry), Forge (Foundry).
+  Setup: `git clone`, `yarn install`, `cp .env.example .env.dev` (edit), `yarn setup`.
+  Run (Local): `docker compose up` (Mongo), `anvil` (Chain node), `yarn deploy:local` (Contracts), `yarn dev` (API Server).
+  DB Access (Local Example): `mongodb://ocp:ocp@localhost:27017/mongo?authSource=admin...`
