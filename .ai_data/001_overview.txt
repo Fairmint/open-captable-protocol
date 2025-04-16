@@ -1,15 +1,40 @@
 # Overview: OCP (Open Cap Table Protocol)
 
-# Purpose: Manage capitalization tables on-chain using Open Cap Table Coalition (OCF) standard. Secure, transparent, standardized equity management.
+# Purpose: Manages cap tables on-chain using Open Cap Table Coalition (OCF) standard. Secure, transparent, standardized equity mgmt on EVM chains.
+
+Repo Org:
+  - `src/`: Server (Express API, MongoDB Models, Utils, Routes, WS Listeners).
+  - `chain/`: Smart Contracts (Solidity/Foundry, Diamond Pattern/Facets).
 
 Arch: Dual Layer
-  1. Smart Contracts (Chain): Solidity/Foundry. On-chain data & tx processing. Multi-chain EVM support.
-  2. API Server (Web): Express.js REST API. MongoDB for off-chain data. WebSocket listeners for chain events. OCF validation.
+  1. Chain: Solidity/Foundry contracts, Diamond pattern, On-chain data/tx logic, Multi-EVM support.
+  2. Web: Express.js REST API, MongoDB (off-chain data), WebSocket event listeners, OCF validation.
 
-Feat: Full OCF standard impl, Blockchain agnostic (EVM), Comprehensive data model, Real-time event monitoring (WS), Data validation (OCF), Import/Export.
+Feat: Full OCF standard impl, Blockchain agnostic (EVM), Comprehensive data model, Real-time event monitoring (WS), OCF validation, Import/Export support.
 
-Docs:
-  Prereq: NodeJS (see package.json), MongoDB, Anvil (Foundry), Forge (Foundry).
-  Setup: `git clone`, `yarn install`, `cp .env.example .env.dev` (edit), `yarn setup`.
-  Run (Local): `docker compose up` (Mongo), `anvil` (Chain node), `yarn deploy:local` (Contracts), `yarn dev` (API Server).
-  DB Access (Local Example): `mongodb://ocp:ocp@localhost:27017/mongo?authSource=admin...`
+Prereq: NodeJS (see package.json), Yarn, Foundry (Forge & Anvil), MongoDB (via Docker).
+
+Setup & Run (Local):
+  1. Clone repo: `git clone ...`, `cd ...`
+  2. Env: `cp .env.example .env.local`, Edit `.env.local` (set `PRIVATE_KEY` from Anvil output later).
+  3. Install: `yarn install`.
+  4. Start Services (Separate Terminals):
+     - T1 (Chain): `anvil`
+     - T2 (Deploy): `yarn deploy:local` (Set Facet addresses from output into `.env.local`).
+     - T3 (DB): `docker compose up`
+     - T4 (API): `yarn dev`
+
+DB Access (Local Example): `mongodb://ocp:ocp@localhost:27017/mongo?authSource=admin...`
+
+Multi-Chain Support:
+  - Config: See `src/utils/chains.js`.
+  - API Usage: Pass `chainId` on Issuer create; use `issuerId` for subsequent transactions.
+
+Usage Pattern: Create issuer -> Add stakeholders/stock classes -> Issue securities.
+  - Test Script: `node src/examples/testTransfer.mjs`.
+
+Reset (Local Testing): `yarn deseed` (Clears MongoDB).
+
+Deployment Cmds: `yarn deploy:local`, `yarn deploy:testnet`, `yarn deploy:mainnet`.
+
+# Contrib: See CONTRIBUTING.md guidelines.
