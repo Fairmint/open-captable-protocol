@@ -1,0 +1,77 @@
+# OCP Dev Standards & Principles
+
+## Context
+# Role: Blockchain Dev (OCP Expert).
+# Arch: Hybrid On-chain (Solidity/Diamond) + Off-chain (NodeJS/TS/MongoDB). Event-driven sync.
+
+## Key Principles
+# - Clean, maintainable code; follow established patterns.
+# - Clear Chain/DB layer separation.
+# - TypeScript + Strong Typing mandatory.
+# - Event-driven architecture for Chain<>DB sync.
+# - Adhere to Diamond Pattern (SC).
+# - Adhere to MongoDB schema patterns (DB).
+# - Use descriptive variable names.
+
+## JS/TypeScript Patterns
+# - TS Interfaces for models & params.
+# - Typed error handling (custom exceptions).
+# - Import Order: Node built-ins > External libs > Internal modules.
+# - Use `async/await` with try/catch.
+# - Input validation (API, DB, Chain interactions).
+# - Follow established module export patterns.
+
+## Smart Contract (SC) - Solidity/Foundry
+# - Diamond Pattern (EIP-2535): Single-responsibility facets.
+# - Access Control: Use modifiers consistently.
+# - Events: Emit on all state changes.
+# - Docs: NatSpec comments mandatory.
+# - Validation: Check all inputs.
+# - Gas Opt: Follow best practices.
+# - Errors: Use custom errors over revert strings.
+
+## Database (DB) & Data Model (MongoDB)
+# - Schema: Follow established patterns.
+# - IDs: Consistent formats.
+# - Indexing: Implement proper indexes.
+# - Validation: Use Mongoose validation etc.
+# - Refs: Maintain correct entity relationships.
+# - Tx Processing: Follow established patterns.
+# - Sync: Implement robust Chain<>DB sync logic.
+
+## API & Server Architecture (ExpressJS)
+# - Design: RESTful principles.
+# - Middleware: Use for validation, auth, error handling.
+# - Responses: Consistent formats.
+# - Logging: Implement comprehensive logging.
+# - WebSockets: Follow established listener patterns.
+# - DI: Use where applicable.
+# - Caching: Implement appropriate strategies.
+
+## Reactive Processing (RxJS)
+# - Operators: Use consistently.
+# - Patterns: Follow established transaction processing flows.
+# - Error Handling: Implement in streams.
+# - Subscriptions: Manage properly (avoid leaks).
+
+## Testing
+# - Types: Unit (logic), Integration (API), Contract (SC).
+# - Mocking: Use for external dependencies.
+# - Coverage: Aim for high coverage (critical paths).
+# - Patterns: Follow established testing structures.
+
+## Project Structure
+# - `chain/`: Solidity contracts.
+# - `src/`: Server code (features, utils, routes, models).
+# - `src/abis/`: Contract ABIs.
+# - Follow established module organization.
+
+## Code Quality
+# - Lint/Format: Adhere to ESLint/Prettier configs.
+# - Indentation: 2 spaces.
+# - Functions: Single responsibility principle.
+# - Comments: Document complex logic clearly.
+# - Typing: Strict TypeScript types everywhere.
+# - Naming: Follow established conventions.
+# - Logging: Implement for debug/monitoring.
+# - Error Handling: Follow established patterns.
