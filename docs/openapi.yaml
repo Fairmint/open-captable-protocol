@@ -1,0 +1,761 @@
+openapi: 3.0.0
+info:
+  title: OCP (Open Cap Table Protocol) API
+  description: |
+    API for managing cap tables through Open Cap Table Protocol standards.
+    This API provides functionality for creating and managing issuers, stakeholders, 
+    stock classes, equity plans, and transactions along with analytical tools for 
+    cap table visualization and exporting data in standard formats.
+  version: 1.0.0
+  contact:
+    name: Fairmint Engineering Team
+
+servers:
+  - url: https://api.ocp.fairmint.co
+    description: Production server
+  - url: https://api.ocp-staging.fairmint.co
+    description: Staging server
+  - url: https://api.ocp-dev.fairmint.co
+    description: Development server
+
+paths:
+  /:
+    get:
+      summary: API Root
+      description: Returns a welcome message for the API.
+      responses:
+        "200":
+          description: Welcome message
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Welcome to the future of Transfer Agents 💸"
+
+  /health:
+    get:
+      summary: Health Check
+      description: Simple endpoint to check if the API is operational.
+      tags:
+        - System
+      responses:
+        "200":
+          description: API is healthy
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "OK"
+
+  /verify-cap-table:
+    post:
+      summary: Verify Cap Table
+      description: |
+        Validates a cap table manifest against OCF standards and business rules.
+        This endpoint processes a complete cap table manifest and verifies:
+        - Schema compliance with OCF standards
+        - Business rule validations
+        - Internal consistency of transactions and entities
+      tags:
+        - Validation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: OCF-formatted cap table manifest
+      responses:
+        "200":
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                    description: Whether the cap table is valid
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                    description: List of validation errors (if any)
+        "500":
+          description: Server error
+
+  /issuer/create:
+    post:
+      summary: Create Issuer
+      description: |
+        Creates a new issuer (company) and deploys a cap table contract on the blockchain.
+        
+        This endpoint:
+        1. Validates the issuer data against OCF standards
+        2. Deploys a new cap table smart contract
+        3. Creates a database record for the issuer
+        4. Sets up event listeners for the deployed contract
+      tags:
+        - Issuer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chain_id
+                - legal_name
+                - initial_shares_authorized
+              properties:
+                chain_id:
+                  type: integer
+                  description: ID of the blockchain network to deploy to
+                legal_name:
+                  type: string
+                  description: Legal name of the issuer (company)
+                initial_shares_authorized:
+                  type: integer
+                  description: Initial number of authorized shares
+                formation_date:
+                  type: string
+                  format: date
+                  description: Date of company formation
+                # More fields from OCF issuer schema
+      responses:
+        "200":
+          description: Issuer created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  issuer:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                        description: Issuer ID
+                      deployed_to:
+                        type: string
+                        description: Contract address on blockchain
+                      legal_name:
+                        type: string
+                      # Other issuer fields
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "500":
+          description: Server error
+
+  /issuer/create-fairmint-reflection:
+    post:
+      summary: Create Fairmint Issuer Reflection
+      description: |
+        Creates an issuer record that reflects a Fairmint portal.
+        
+        This endpoint is specifically for integrating with Fairmint's portal system by:
+        1. Creating an issuer record in OCP
+        2. Deploying a cap table contract
+        3. Setting up reflection data between Fairmint and OCP
+        4. Establishing bidirectional syncing of data
+      tags:
+        - Issuer
+        - Fairmint Integration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chain_id
+                - legal_name
+                - initial_shares_authorized
+                - id
+              properties:
+                chain_id:
+                  type: integer
+                  description: ID of the blockchain network to deploy to
+                id:
+                  type: string
+                  description: Portal ID from Fairmint (will be used as issuer ID)
+                legal_name:
+                  type: string
+                  description: Legal name of the issuer (company)
+                initial_shares_authorized:
+                  type: integer
+                  description: Initial number of authorized shares
+                # More fields from OCF issuer schema
+      responses:
+        "200":
+          description: Issuer created and reflected successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  issuer:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                        description: Issuer ID (same as portal ID)
+                      deployed_to:
+                        type: string
+                        description: Contract address on blockchain
+                      legal_name:
+                        type: string
+                      # Other issuer fields
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "500":
+          description: Server error
+
+  /issuer/id/{id}:
+    get:
+      summary: Get Issuer
+      description: Retrieves basic information about an issuer by ID.
+      tags:
+        - Issuer
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Issuer ID
+      responses:
+        "200":
+          description: Issuer found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  issuerId:
+                    type: string
+                    description: Issuer ID
+                  type:
+                    type: string
+                    description: Type of issuer
+                  role:
+                    type: string
+                    description: Role of issuer
+        "500":
+          description: Server error
+
+  /issuer/total-number:
+    get:
+      summary: Count Issuers
+      description: Returns the total number of issuers in the system.
+      tags:
+        - Issuer
+      responses:
+        "200":
+          description: Total count of issuers
+          content:
+            application/json:
+              schema:
+                type: integer
+                description: Number of issuers
+        "500":
+          description: Server error
+
+  /stats/rxjs/dashboard:
+    get:
+      summary: Get Dashboard Stats
+      description: |
+        Calculates and returns dashboard statistics for an issuer.
+        
+        Uses RxJS to process the transaction history and generate dashboard metrics including:
+        - Shares issued by stakeholder relationship
+        - Stakeholder positions
+        - Total capital raised
+        - Latest share price
+        - Valuation metrics
+      tags:
+        - Stats
+      parameters:
+        - in: query
+          name: issuerId
+          schema:
+            type: string
+          required: true
+          description: Issuer ID to generate stats for
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sharesIssuedByCurrentRelationship:
+                    type: object
+                    description: Shares grouped by stakeholder relationship
+                  positions:
+                    type: array
+                    description: Array of stakeholder positions
+                    items:
+                      type: object
+                  numOfStakeholders:
+                    type: integer
+                    description: Count of stakeholders
+                  totalRaised:
+                    type: number
+                    description: Total capital raised
+                  latestSharePrice:
+                    type: number
+                    description: Most recent share price
+                  valuations:
+                    type: object
+                    properties:
+                      stock:
+                        type: object
+                        properties:
+                          amount:
+                            type: number
+                          createdAt:
+                            type: string
+                            format: date-time
+                          type:
+                            type: string
+                            enum: ["STOCK"]
+                      convertible:
+                        type: object
+                        properties:
+                          amount:
+                            type: number
+                          createdAt:
+                            type: string
+                            format: date-time
+                          type:
+                            type: string
+                            enum: ["CONVERTIBLE"]
+        "404":
+          description: Issuer not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                  error:
+                    type: object
+
+  /stats/rxjs/captable:
+    get:
+      summary: Get Cap Table Stats
+      description: |
+        Calculates and returns cap table statistics for an issuer.
+        
+        Uses RxJS to process the transaction history and generate a detailed cap table including:
+        - Common and preferred stock summaries by class
+        - Founder preferred shares (if applicable)
+        - Warrants and non-plan awards
+        - Stock plans (options, RSUs)
+        - Convertible securities
+        - Fully-diluted calculations
+      tags:
+        - Stats
+      parameters:
+        - in: query
+          name: issuerId
+          schema:
+            type: string
+          required: true
+          description: Issuer ID to generate stats for
+      responses:
+        "200":
+          description: Cap table statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary:
+                    type: object
+                    properties:
+                      common:
+                        type: object
+                        properties:
+                          rows:
+                            type: array
+                            items:
+                              type: object
+                          totalSharesAuthorized:
+                            type: integer
+                      preferred:
+                        type: object
+                        properties:
+                          rows:
+                            type: array
+                            items:
+                              type: object
+                          totalSharesAuthorized:
+                            type: integer
+                      founderPreferred:
+                        type: object
+                        nullable: true
+                        properties:
+                          outstandingShares:
+                            type: integer
+                          sharesAuthorized:
+                            type: integer
+                          fullyDilutedShares:
+                            type: integer
+                          liquidation:
+                            type: number
+                          votingPower:
+                            type: integer
+                      warrantsAndNonPlanAwards:
+                        type: object
+                        properties:
+                          rows:
+                            type: array
+                            items:
+                              type: object
+                      stockPlans:
+                        type: object
+                        properties:
+                          rows:
+                            type: array
+                            items:
+                              type: object
+                          totalSharesAuthorized:
+                            type: integer
+                      totals:
+                        type: object
+                        properties:
+                          totalSharesAuthorized:
+                            type: integer
+                          totalOutstandingShares:
+                            type: integer
+                          totalFullyDilutedShares:
+                            type: integer
+                          totalLiquidation:
+                            type: number
+                          totalVotingPower:
+                            type: integer
+                  convertibles:
+                    type: object
+                    properties:
+                      convertiblesSummary:
+                        type: object
+                      totals:
+                        type: object
+                        properties:
+                          outstandingAmount:
+                            type: number
+                  isCapTableEmpty:
+                    type: boolean
+        "404":
+          description: Issuer not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                  error:
+                    type: object
+
+  /export/ocf:
+    get:
+      summary: Export OCF Data
+      description: |
+        Exports all cap table data for an issuer in Open Cap Table Format (OCF).
+        
+        This endpoint retrieves and formats complete cap table data including:
+        - Issuer information
+        - Stakeholders
+        - Stock classes
+        - Stock plans
+        - Stock legend templates
+        - Valuations
+        - Vesting terms
+        
+        The data can be used to generate OCX files or integrate with other OCF-compatible systems.
+      tags:
+        - Export
+      parameters:
+        - in: query
+          name: issuerId
+          schema:
+            type: string
+          required: true
+          description: Issuer ID to export data for
+      responses:
+        "200":
+          description: OCF-formatted cap table data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  issuer:
+                    type: object
+                    description: Issuer information
+                  stakeholders:
+                    type: array
+                    items:
+                      type: object
+                    description: List of stakeholders
+                  stockClasses:
+                    type: array
+                    items:
+                      type: object
+                    description: List of stock classes
+                  stockPlans:
+                    type: array
+                    items:
+                      type: object
+                    description: List of stock plans
+                  stockLegendTemplates:
+                    type: array
+                    items:
+                      type: object
+                    description: List of stock legend templates
+                  valuations:
+                    type: array
+                    items:
+                      type: object
+                    description: List of valuations
+                  vestingTerms:
+                    type: array
+                    items:
+                      type: object
+                    description: List of vesting terms
+        "400":
+          description: Missing issuer ID
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "issuerId is required"
+        "500":
+          description: Server error
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Failed to fetch data"
+
+  /ocf/validate/transactions:
+    post:
+      summary: Validate OCF Transactions
+      description: |
+        Validates a set of OCF-formatted transactions.
+        
+        This endpoint validates transactions against the OCF schema and business rules,
+        checking for consistency and correctness without actually creating the transactions.
+      tags:
+        - Validation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    description: OCF-formatted transaction entities
+      responses:
+        "200":
+          description: Validation successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                    description: Whether the transactions are valid
+                    example: true
+        "400":
+          description: Missing data
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "❌ | no data field in request body"
+        "500":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                    example: false
+                  error:
+                    type: object
+                    description: Error details
+
+  /stakeholder:
+    post:
+      summary: Create Stakeholder
+      description: |
+        Creates a new stakeholder in the cap table.
+        
+        This endpoint creates a stakeholder record in the database and on the blockchain,
+        allowing equity to be issued to this entity in future transactions.
+      tags:
+        - Stakeholder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - issuerId
+                - stakeholder
+              properties:
+                issuerId:
+                  type: string
+                  description: ID of the issuer this stakeholder belongs to
+                stakeholder:
+                  type: object
+                  description: Stakeholder data in OCF format
+      responses:
+        "200":
+          description: Stakeholder created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stakeholder:
+                    type: object
+                    description: Created stakeholder data
+        "400":
+          description: Invalid request or missing issuerId
+        "500":
+          description: Server error
+
+  /transactions:
+    post:
+      summary: Create Transaction
+      description: |
+        Creates a new transaction in the cap table.
+        
+        This endpoint processes various transaction types including:
+        - Stock issuance
+        - Equity compensation issuance
+        - Convertible issuance
+        - Stock cancellation
+        - Adjustments to authorized shares
+        
+        Transactions are created in the database and reflected on the blockchain.
+      tags:
+        - Transactions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - issuerId
+                - transaction
+              properties:
+                issuerId:
+                  type: string
+                  description: ID of the issuer this transaction belongs to
+                transaction:
+                  type: object
+                  description: Transaction data in OCF format
+      responses:
+        "200":
+          description: Transaction created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transaction:
+                    type: object
+                    description: Created transaction data
+        "400":
+          description: Invalid request or missing issuerId
+        "500":
+          description: Server error
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: API key for authorization
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: JWT token for authorization
+
+tags:
+  - name: System
+    description: System-level endpoints
+  - name: Issuer
+    description: Endpoints for managing issuer (company) data
+  - name: Stakeholder
+    description: Endpoints for managing stakeholders (investors, employees)
+  - name: Transactions
+    description: Endpoints for creating and managing cap table transactions
+  - name: Stats
+    description: Endpoints for generating analytics and statistics
+  - name: Export
+    description: Endpoints for exporting data in standard formats
+  - name: Validation
+    description: Endpoints for validating data against OCF standards
+  - name: Fairmint Integration
+    description: Endpoints specifically for integration with Fairmint
+
+security:
+  - ApiKeyAuth: []
+  - BearerAuth: []
