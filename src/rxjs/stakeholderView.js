@@ -10,6 +10,9 @@
  *   - Ownership percentages
  */
 
+// Import modular processors
+import { processStakeholderViewConvertibleIssuance, processStakeholderViewWarrantIssuance, formatConvertiblesForDisplay } from "./processors";
+
 // Security types
 const StockClassTypes = {
     COMMON: "COMMON",
@@ -84,6 +87,12 @@ export const processStakeholderViewStockIssuance = (state, transaction, stakehol
             fullyDiluted: 0,
             votingPower: 0,
             isFounderPreferred: classType === StockClassTypes.PREFERRED && issuance_type === StockIssuanceTypes.FOUNDERS_STOCK,
+            // Add new fields for historical tracking
+            boardApprovalDate: transaction.board_approval_date || null,
+            issuedDate: transaction.date || null,
+            pricePerShare: transaction.share_price ? parseFloat(transaction.share_price.amount) : null,
+            issuanceAmount: parseInt(quantity),
+            status: "ISSUED", // Default status for new issuances
         };
     }
 
@@ -198,212 +207,6 @@ export const processStakeholderViewEquityCompIssuance = (state, transaction, sta
 
     // Update holder totals - equity comp only impacts fully diluted
     holder.holdings.fullyDiluted += numShares;
-
-    return newState;
-};
-
-/**
- * Process warrant issuance for stakeholder view
- * @param {Object} state Current state
- * @param {Object} transaction Warrant issuance transaction
- * @param {Object} stakeholder Stakeholder receiving the warrant
- * @param {Object} stockClass Stock class if applicable
- * @returns {Object} Updated state with processed stakeholder holdings
- */
-export const processStakeholderViewWarrantIssuance = (state, transaction, stakeholder, stockClass) => {
-    const { exercise_triggers } = transaction;
-    const stakeholderId = stakeholder._id;
-
-    // Deep clone state to avoid mutations
-    const newState = JSON.parse(JSON.stringify(state));
-
-    // Try to determine the number of shares this warrant represents
-    let numShares = 0;
-    if (exercise_triggers && exercise_triggers.length > 0) {
-        const trigger = exercise_triggers[0];
-        if (
-            trigger.conversion_right &&
-            trigger.conversion_right.conversion_mechanism &&
-            trigger.conversion_right.conversion_mechanism.type === "FIXED_AMOUNT_CONVERSION"
-        ) {
-            numShares = parseInt(trigger.conversion_right.conversion_mechanism.converts_to_quantity || 0);
-        }
-    }
-
-    if (numShares === 0) {
-        // If we can't determine shares from triggers, use quantity field directly
-        numShares = parseInt(transaction.quantity || 0);
-    }
-
-    // If we still have no shares, this warrant can't be processed
-    if (numShares === 0) {
-        return state;
-    }
-
-    // Initialize holder if not exists
-    if (!newState.holders[stakeholderId]) {
-        newState.holders[stakeholderId] = {
-            id: stakeholderId,
-            name: stakeholder.name.legal_name,
-            relationship: stakeholder.current_relationship,
-            holdings: {
-                outstanding: 0,
-                asConverted: 0,
-                fullyDiluted: 0,
-                byClass: {},
-            },
-            votingRights: {
-                votes: 0,
-                percentage: 0,
-            },
-        };
-    }
-
-    const holder = newState.holders[stakeholderId];
-    const className = stockClass ? stockClass.name : "Unknown";
-    const categoryName = `${className} Warrants`;
-
-    // Initialize category in holdings if not exists
-    if (!holder.holdings.byClass[categoryName]) {
-        holder.holdings.byClass[categoryName] = {
-            type: "WARRANT",
-            className: categoryName,
-            stockClassId: stockClass ? stockClass._id : null,
-            outstanding: 0,
-            asConverted: 0,
-            fullyDiluted: 0,
-            votingPower: 0,
-        };
-    }
-
-    const categoryHolding = holder.holdings.byClass[categoryName];
-
-    // These don't count towards outstanding, only fully diluted
-    categoryHolding.fullyDiluted += numShares;
-
-    // Update holder totals - warrants only impact fully diluted
-    holder.holdings.fullyDiluted += numShares;
-
-    return newState;
-};
-
-/**
- * Process convertible issuance for stakeholder view
- * @param {Object} state Current state
- * @param {Object} transaction Convertible transaction
- * @param {Object} stakeholder Stakeholder
- * @returns {Object} Updated state
- */
-export const processStakeholderViewConvertibleIssuance = (state, transaction, stakeholder) => {
-    // Deep clone state to avoid mutations
-    const newState = JSON.parse(JSON.stringify(state));
-    const stakeholderId = stakeholder._id;
-
-    // Initialize holder if not exists
-    if (!newState.holders[stakeholderId]) {
-        newState.holders[stakeholderId] = {
-            id: stakeholderId,
-            name: stakeholder.name.legal_name,
-            relationship: stakeholder.current_relationship,
-            holdings: {
-                outstanding: 0,
-                asConverted: 0,
-                fullyDiluted: 0,
-                byClass: {},
-            },
-            votingRights: {
-                votes: 0,
-                percentage: 0,
-            },
-            convertibles: {
-                safes: [],
-                notes: [],
-                other: [],
-            },
-        };
-    }
-
-    const holder = newState.holders[stakeholderId];
-
-    // Ensure convertibles property exists
-    if (!holder.convertibles) {
-        holder.convertibles = {
-            safes: [],
-            notes: [],
-            other: [],
-        };
-    }
-
-    // Extract convertible details
-    const { id, convertible_type, investment_amount, date, conversion_triggers = [], custom_id } = transaction;
-
-    // Get monetary value
-    const amount = investment_amount?.amount || 0;
-    const currency = investment_amount?.currency || "USD";
-
-    // Extract conversion details from triggers (val cap, discount)
-    let valuationCap = null;
-    let discount = null;
-
-    // Find conversion details in triggers
-    conversion_triggers.forEach((trigger) => {
-        if (trigger.conversion_mechanism) {
-            // Extract valuation cap if present
-            if (trigger.conversion_mechanism.valuation_cap) {
-                valuationCap = trigger.conversion_mechanism.valuation_cap.amount;
-            }
-
-            // Extract discount if present
-            if (trigger.conversion_mechanism.type === "DISCOUNT_CONVERSION" && trigger.conversion_mechanism.discount) {
-                discount = trigger.conversion_mechanism.discount;
-            }
-        }
-
-        // Check for conversion right structure (this is the actual path in OCP data)
-        if (trigger.conversion_right && trigger.conversion_right.conversion_mechanism) {
-            const mechanism = trigger.conversion_right.conversion_mechanism;
-
-            // Extract valuation cap
-            if (mechanism.conversion_valuation_cap) {
-                valuationCap = mechanism.conversion_valuation_cap.amount;
-            }
-
-            // Extract discount
-            if (mechanism.type === "DISCOUNT_CONVERSION" && mechanism.discount) {
-                discount = mechanism.discount;
-            } else if (mechanism.type === "SAFE_CONVERSION" && mechanism.discount) {
-                discount = mechanism.discount;
-            }
-        }
-    });
-
-    // Build convertible object
-    const convertibleItem = {
-        id,
-        customId: custom_id || id.substring(0, 8),
-        amount,
-        currency,
-        date,
-        valuationCap,
-        discount,
-        conversionTriggers: conversion_triggers.map((trigger) => ({
-            type: trigger.trigger_type,
-            description: trigger.description || "",
-        })),
-    };
-
-    // Add to appropriate list based on type
-    switch (convertible_type) {
-        case "SAFE":
-            holder.convertibles.safes.push(convertibleItem);
-            break;
-        case "NOTE":
-            holder.convertibles.notes.push(convertibleItem);
-            break;
-        default:
-            holder.convertibles.other.push(convertibleItem);
-            break;
-    }
 
     return newState;
 };
@@ -530,6 +333,11 @@ export const processStakeholderViewStockCancellation = (state, transaction, stoc
     classHolding.asConverted -= asConvertedShares;
     classHolding.fullyDiluted -= cancelledShares;
     classHolding.votingPower -= votingPower;
+
+    // Add cancellation status and reason
+    classHolding.status = "CANCELLED";
+    classHolding.cancellationReason = transaction.reason_text || "Cancelled";
+    classHolding.cancellationDate = transaction.date;
 
     // Update holder totals
     holder.holdings.outstanding -= cancelledShares;
@@ -812,20 +620,16 @@ export const formatStakeholderViewForDisplay = (stakeholderViewState) => {
                     fullyDiluted: cls.fullyDiluted,
                     isOption: cls.isOption || false,
                     isPlanAward: cls.isPlanAward || false,
+                    // Add new historical tracking fields
+                    boardApprovalDate: cls.boardApprovalDate || null,
+                    issuedDate: cls.issuedDate || null,
+                    pricePerShare: cls.pricePerShare || null,
+                    issuanceAmount: cls.issuanceAmount || null,
+                    status: cls.status || "ISSUED",
+                    cancellationReason: cls.cancellationReason || null,
+                    cancellationDate: cls.cancellationDate || null,
                 })),
-                convertibles: holder.convertibles
-                    ? {
-                          safes: holder.convertibles.safes.map((safe) => ({
-                              ...safe,
-                              formattedAmount: `$${Number(safe.amount).toLocaleString()}`,
-                          })),
-                          notes: holder.convertibles.notes.map((note) => ({
-                              ...note,
-                              formattedAmount: `$${Number(note.amount).toLocaleString()}`,
-                          })),
-                          other: holder.convertibles.other,
-                      }
-                    : { safes: [], notes: [], other: [] },
+                convertibles: formatConvertiblesForDisplay(holder.convertibles),
             },
             votingRights: {
                 votes: holder.votingRights.votes,
