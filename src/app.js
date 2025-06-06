@@ -3,6 +3,7 @@ import { setupEnv } from "./utils/env.js";
 import { connectDB } from "./db/config/mongoose.ts";
 import { startListener } from "./utils/websocket.ts";
 import { setTag } from "@sentry/node";
+import cors from "cors";
 import * as Sentry from "@sentry/node";
 
 // Routes
@@ -18,7 +19,7 @@ import vestingTermsRoutes from "./routes/vestingTerms.js";
 import statsRoutes from "./routes/stats/index.js";
 import exportRoutes from "./routes/export.js";
 import ocfRoutes from "./routes/ocf.js";
-
+import manifestRoutes from "./routes/manifest.js";
 import { readAllIssuers, readIssuerById } from "./db/operations/read.js";
 import { contractCache } from "./utils/simple_caches.js";
 import { getContractInstance } from "./chain-operations/getContractInstances.js";
@@ -79,6 +80,7 @@ const contractMiddleware = async (req, res, next) => {
     next();
 };
 
+app.use(cors());
 app.use(urlencoded({ limit: "50mb", extended: true }));
 app.use(json({ limit: "50mb" }));
 app.enable("trust proxy");
@@ -96,6 +98,7 @@ app.use("/vesting-terms", vestingTermsRoutes);
 app.use("/stats", statsRoutes);
 app.use("/export", exportRoutes);
 app.use("/ocf", ocfRoutes);
+app.use("/manifest", manifestRoutes);
 
 // transactions
 app.use("/transactions/", contractMiddleware, transactionRoutes);
