@@ -3,8 +3,8 @@ info:
   title: OCP (Open Cap Table Protocol) API
   description: |
     API for managing cap tables through Open Cap Table Protocol standards.
-    This API provides functionality for creating and managing issuers, stakeholders, 
-    stock classes, equity plans, and transactions along with analytical tools for 
+    This API provides functionality for creating and managing issuers, stakeholders,
+    stock classes, equity plans, and transactions along with analytical tools for
     cap table visualization and exporting data in standard formats.
   version: 1.0.0
   contact:
@@ -89,7 +89,7 @@ paths:
       summary: Create Issuer
       description: |
         Creates a new issuer (company) and deploys a cap table contract on the blockchain.
-        
+
         This endpoint:
         1. Validates the issuer data against OCF standards
         2. Deploys a new cap table smart contract
@@ -159,7 +159,7 @@ paths:
       summary: Create Fairmint Issuer Reflection
       description: |
         Creates an issuer record that reflects a Fairmint portal.
-        
+
         This endpoint is specifically for integrating with Fairmint's portal system by:
         1. Creating an issuer record in OCP
         2. Deploying a cap table contract
@@ -280,7 +280,7 @@ paths:
       summary: Get Dashboard Stats
       description: |
         Calculates and returns dashboard statistics for an issuer.
-        
+
         Uses RxJS to process the transaction history and generate dashboard metrics including:
         - Shares issued by stakeholder relationship
         - Stakeholder positions
@@ -374,7 +374,7 @@ paths:
       summary: Get Cap Table Stats
       description: |
         Calculates and returns cap table statistics for an issuer.
-        
+
         Uses RxJS to process the transaction history and generate a detailed cap table including:
         - Common and preferred stock summaries by class
         - Founder preferred shares (if applicable)
@@ -503,7 +503,7 @@ paths:
       summary: Export OCF Data
       description: |
         Exports all cap table data for an issuer in Open Cap Table Format (OCF).
-        
+
         This endpoint retrieves and formats complete cap table data including:
         - Issuer information
         - Stakeholders
@@ -512,7 +512,7 @@ paths:
         - Stock legend templates
         - Valuations
         - Vesting terms
-        
+
         The data can be used to generate OCX files or integrate with other OCF-compatible systems.
       tags:
         - Export
@@ -584,7 +584,7 @@ paths:
       summary: Validate OCF Transactions
       description: |
         Validates a set of OCF-formatted transactions.
-        
+
         This endpoint validates transactions against the OCF schema and business rules,
         checking for consistency and correctness without actually creating the transactions.
       tags:
@@ -636,12 +636,12 @@ paths:
                     type: object
                     description: Error details
 
-  /stakeholder:
+  /stakeholder/create:
     post:
       summary: Create Stakeholder
       description: |
         Creates a new stakeholder in the cap table.
-        
+
         This endpoint creates a stakeholder record in the database and on the blockchain,
         allowing equity to be issued to this entity in future transactions.
       tags:
@@ -654,12 +654,12 @@ paths:
               type: object
               required:
                 - issuerId
-                - stakeholder
+                - data
               properties:
                 issuerId:
                   type: string
                   description: ID of the issuer this stakeholder belongs to
-                stakeholder:
+                data:
                   type: object
                   description: Stakeholder data in OCF format
       responses:
@@ -678,20 +678,89 @@ paths:
         "500":
           description: Server error
 
-  /transactions:
+  /stakeholder/create-fairmint-reflection:
     post:
-      summary: Create Transaction
+      summary: Create Fairmint Stakeholder Reflection
       description: |
-        Creates a new transaction in the cap table.
-        
-        This endpoint processes various transaction types including:
-        - Stock issuance
-        - Equity compensation issuance
-        - Convertible issuance
-        - Stock cancellation
-        - Adjustments to authorized shares
-        
-        Transactions are created in the database and reflected on the blockchain.
+        Creates a stakeholder record that reflects a Fairmint stakeholder.
+      tags:
+        - Stakeholder
+        - Fairmint Integration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - issuerId
+                - data
+              properties:
+                issuerId:
+                  type: string
+                  description: ID of the issuer this stakeholder belongs to
+                data:
+                  type: object
+                  description: Stakeholder data in OCF format
+      responses:
+        "200":
+          description: Stakeholder created successfully
+        "400":
+          description: Invalid request
+        "500":
+          description: Server error
+
+  /stakeholder/id/{id}:
+    get:
+      summary: Get Stakeholder
+      description: Retrieves stakeholder information by ID from blockchain.
+      tags:
+        - Stakeholder
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Stakeholder ID
+      responses:
+        "200":
+          description: Stakeholder found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stakeholderId:
+                    type: string
+                  type:
+                    type: string
+                  role:
+                    type: string
+        "500":
+          description: Server error
+
+  /stakeholder/total-number:
+    get:
+      summary: Count Stakeholders
+      description: Returns the total number of stakeholders.
+      tags:
+        - Stakeholder
+      responses:
+        "200":
+          description: Total count of stakeholders
+          content:
+            application/json:
+              schema:
+                type: integer
+        "500":
+          description: Server error
+
+  /transactions/issuance/stock:
+    post:
+      summary: Create Stock Issuance
+      description: |
+        Creates a new stock issuance transaction.
       tags:
         - Transactions
       requestBody:
@@ -702,29 +771,815 @@ paths:
               type: object
               required:
                 - issuerId
-                - transaction
+                - data
               properties:
                 issuerId:
                   type: string
                   description: ID of the issuer this transaction belongs to
-                transaction:
+                data:
                   type: object
-                  description: Transaction data in OCF format
+                  description: Stock issuance data in OCF format
       responses:
         "200":
-          description: Transaction created successfully
+          description: Stock issuance created successfully
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  transaction:
+                  stockIssuance:
                     type: object
-                    description: Created transaction data
+                    description: Created stock issuance data
         "400":
           description: Invalid request or missing issuerId
         "500":
           description: Server error
+
+  /transactions/issuance/equity-compensation:
+    post:
+      summary: Create Equity Compensation Issuance
+      description: |
+        Creates a new equity compensation issuance transaction.
+      tags:
+        - Transactions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - issuerId
+                - data
+              properties:
+                issuerId:
+                  type: string
+                data:
+                  type: object
+      responses:
+        "200":
+          description: Equity compensation issuance created successfully
+        "500":
+          description: Server error
+
+  /transactions/issuance/convertible:
+    post:
+      summary: Create Convertible Issuance
+      description: |
+        Creates a new convertible issuance transaction.
+      tags:
+        - Transactions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - issuerId
+                - data
+              properties:
+                issuerId:
+                  type: string
+                data:
+                  type: object
+      responses:
+        "200":
+          description: Convertible issuance created successfully
+        "500":
+          description: Server error
+
+  /transactions/issuance/warrant:
+    post:
+      summary: Create Warrant Issuance
+      description: |
+        Creates a new warrant issuance transaction.
+      tags:
+        - Transactions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - issuerId
+                - data
+              properties:
+                issuerId:
+                  type: string
+                data:
+                  type: object
+      responses:
+        "200":
+          description: Warrant issuance created successfully
+        "500":
+          description: Server error
+
+  /transactions/cancel/stock:
+    post:
+      summary: Cancel Stock
+      description: |
+        Creates a stock cancellation transaction.
+      tags:
+        - Transactions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - issuerId
+                - data
+              properties:
+                issuerId:
+                  type: string
+                data:
+                  type: object
+      responses:
+        "200":
+          description: Stock cancellation created successfully
+        "500":
+          description: Server error
+
+  /transactions/transfer/stock:
+    post:
+      summary: Transfer Stock
+      description: |
+        Creates a stock transfer transaction.
+      tags:
+        - Transactions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - issuerId
+                - data
+              properties:
+                issuerId:
+                  type: string
+                data:
+                  type: object
+      responses:
+        "200":
+          description: Stock transfer completed successfully
+        "500":
+          description: Server error
+
+  /transactions/exercise/equity-compensation:
+    post:
+      summary: Exercise Equity Compensation
+      description: |
+        Creates an equity compensation exercise transaction.
+      tags:
+        - Transactions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - issuerId
+                - data
+              properties:
+                issuerId:
+                  type: string
+                data:
+                  type: object
+      responses:
+        "200":
+          description: Equity compensation exercise created successfully
+        "500":
+          description: Server error
+
+  /transactions/adjust/issuer/authorized-shares:
+    post:
+      summary: Adjust Issuer Authorized Shares
+      description: |
+        Creates an issuer authorized shares adjustment transaction.
+      tags:
+        - Transactions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - issuerId
+                - data
+              properties:
+                issuerId:
+                  type: string
+                data:
+                  type: object
+      responses:
+        "200":
+          description: Authorized shares adjustment created successfully
+        "500":
+          description: Server error
+
+  /transactions/adjust/stock-class/authorized-shares:
+    post:
+      summary: Adjust Stock Class Authorized Shares
+      description: |
+        Creates a stock class authorized shares adjustment transaction.
+      tags:
+        - Transactions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - issuerId
+                - data
+              properties:
+                issuerId:
+                  type: string
+                data:
+                  type: object
+      responses:
+        "200":
+          description: Stock class authorized shares adjustment created successfully
+        "500":
+          description: Server error
+
+  /transactions/adjust/stock-plan-pool:
+    post:
+      summary: Adjust Stock Plan Pool
+      description: |
+        Creates a stock plan pool adjustment transaction.
+      tags:
+        - Transactions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - issuerId
+                - data
+              properties:
+                issuerId:
+                  type: string
+                data:
+                  type: object
+      responses:
+        "200":
+          description: Stock plan pool adjustment created successfully
+        "500":
+          description: Server error
+
+  /transactions/retract/stock:
+    post:
+      summary: Retract Stock
+      description: |
+        Creates a stock retraction transaction.
+      tags:
+        - Transactions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: object
+                  properties:
+                    stakeholderId:
+                      type: string
+                    stockClassId:
+                      type: string
+      responses:
+        "200":
+          description: Stock retraction created successfully
+        "500":
+          description: Server error
+
+  /transactions/reissue/stock:
+    post:
+      summary: Reissue Stock
+      description: |
+        Creates a stock reissuance transaction.
+      tags:
+        - Transactions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: object
+                  properties:
+                    stakeholderId:
+                      type: string
+                    stockClassId:
+                      type: string
+      responses:
+        "200":
+          description: Stock reissuance created successfully
+        "500":
+          description: Server error
+
+  /transactions/repurchase/stock:
+    post:
+      summary: Repurchase Stock
+      description: |
+        Creates a stock repurchase transaction.
+      tags:
+        - Transactions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: object
+                  properties:
+                    stakeholderId:
+                      type: string
+                    stockClassId:
+                      type: string
+      responses:
+        "200":
+          description: Stock repurchase created successfully
+        "500":
+          description: Server error
+
+  /transactions/accept/stock:
+    post:
+      summary: Accept Stock
+      description: |
+        Creates a stock acceptance transaction.
+      tags:
+        - Transactions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: object
+                  properties:
+                    stakeholderId:
+                      type: string
+                    stockClassId:
+                      type: string
+      responses:
+        "200":
+          description: Stock acceptance created successfully
+        "500":
+          description: Server error
+
+  /stock-class/create:
+    post:
+      summary: Create Stock Class
+      description: |
+        Creates a new stock class for an issuer.
+      tags:
+        - Stock Class
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - issuerId
+                - data
+              properties:
+                issuerId:
+                  type: string
+                  description: ID of the issuer this stock class belongs to
+                data:
+                  type: object
+                  description: Stock class data in OCF format
+      responses:
+        "200":
+          description: Stock class created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stockClass:
+                    type: object
+                    description: Created stock class data
+        "400":
+          description: Invalid request or missing issuerId
+        "500":
+          description: Server error
+
+  /stock-class/id/{id}:
+    get:
+      summary: Get Stock Class
+      description: Retrieves stock class information by ID.
+      tags:
+        - Stock Class
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Stock class ID
+      responses:
+        "200":
+          description: Stock class found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stockClassId:
+                    type: string
+                  classType:
+                    type: string
+                  pricePerShare:
+                    type: number
+                  initialSharesAuthorized:
+                    type: integer
+        "500":
+          description: Server error
+
+  /stock-class/total-number:
+    get:
+      summary: Count Stock Classes
+      description: Returns the total number of stock classes.
+      tags:
+        - Stock Class
+      responses:
+        "200":
+          description: Total count of stock classes
+          content:
+            application/json:
+              schema:
+                type: integer
+        "500":
+          description: Server error
+
+  /stock-plan/create:
+    post:
+      summary: Create Stock Plan
+      description: |
+        Creates a new stock plan for an issuer.
+      tags:
+        - Stock Plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - issuerId
+                - data
+              properties:
+                issuerId:
+                  type: string
+                  description: ID of the issuer this stock plan belongs to
+                data:
+                  type: object
+                  description: Stock plan data in OCF format
+      responses:
+        "200":
+          description: Stock plan created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stockPlan:
+                    type: object
+                    description: Created stock plan data
+        "400":
+          description: Invalid request or missing issuerId
+        "500":
+          description: Server error
+
+  /stock-plan/id/{id}:
+    get:
+      summary: Get Stock Plan
+      description: Retrieves stock plan information by ID.
+      tags:
+        - Stock Plan
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Stock plan ID
+      responses:
+        "200":
+          description: Stock plan found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Stock plan data
+        "500":
+          description: Server error
+
+  /stock-plan/total-number:
+    get:
+      summary: Count Stock Plans
+      description: Returns the total number of stock plans.
+      tags:
+        - Stock Plan
+      responses:
+        "200":
+          description: Total count of stock plans
+          content:
+            text/plain:
+              schema:
+                type: string
+        "500":
+          description: Server error
+
+  /valuation/create:
+    post:
+      summary: Create Valuation
+      description: |
+        Creates a new valuation for an issuer.
+      tags:
+        - Valuation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - issuerId
+                - data
+              properties:
+                issuerId:
+                  type: string
+                  description: ID of the issuer this valuation belongs to
+                data:
+                  type: object
+                  description: Valuation data in OCF format
+      responses:
+        "200":
+          description: Valuation created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valuation:
+                    type: object
+                    description: Created valuation data
+        "400":
+          description: Invalid request or missing issuerId
+        "500":
+          description: Server error
+
+  /valuation/id/{id}:
+    get:
+      summary: Get Valuation
+      description: Retrieves valuation information by ID.
+      tags:
+        - Valuation
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Valuation ID
+      responses:
+        "200":
+          description: Valuation found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Valuation data
+        "500":
+          description: Server error
+
+  /valuation/total-number:
+    get:
+      summary: Count Valuations
+      description: Returns the total number of valuations.
+      tags:
+        - Valuation
+      responses:
+        "200":
+          description: Total count of valuations
+          content:
+            text/plain:
+              schema:
+                type: string
+        "500":
+          description: Server error
+
+  /vesting-terms/create:
+    post:
+      summary: Create Vesting Terms
+      description: |
+        Creates new vesting terms for an issuer.
+        Note: Vesting Terms are complex and have limited support.
+      tags:
+        - Vesting Terms
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - issuerId
+                - data
+              properties:
+                issuerId:
+                  type: string
+                  description: ID of the issuer these vesting terms belong to
+                data:
+                  type: object
+                  description: Vesting terms data in OCF format
+      responses:
+        "200":
+          description: Vesting terms created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  vestingTerms:
+                    type: object
+                    description: Created vesting terms data
+        "400":
+          description: Invalid request or missing issuerId
+        "500":
+          description: Server error
+
+  /vesting-terms/id/{id}:
+    get:
+      summary: Get Vesting Terms
+      description: Retrieves vesting terms information by ID.
+      tags:
+        - Vesting Terms
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Vesting terms ID
+      responses:
+        "200":
+          description: Vesting terms found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Vesting terms data
+        "500":
+          description: Server error
+
+  /vesting-terms/total-number:
+    get:
+      summary: Count Vesting Terms
+      description: Returns the total number of vesting terms.
+      tags:
+        - Vesting Terms
+      responses:
+        "200":
+          description: Total count of vesting terms
+          content:
+            text/plain:
+              schema:
+                type: string
+        "500":
+          description: Server error
+
+  /manifest/captable:
+    post:
+      summary: Generate Cap Table from Manifest
+      description: |
+        Processes an OCF manifest and generates cap table statistics.
+        This endpoint validates the manifest data and returns analytics.
+      tags:
+        - Manifest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: OCF-formatted manifest containing complete cap table data
+      responses:
+        "200":
+          description: Cap table statistics generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Cap table analytics and statistics
+        "400":
+          description: Invalid manifest data or validation errors
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: string
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  details:
+                    type: string
+
+  /manifest/verify:
+    post:
+      summary: Verify Manifest
+      description: |
+        Validates an OCF manifest against standards and business rules.
+      tags:
+        - Manifest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: OCF-formatted manifest to validate
+      responses:
+        "200":
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                    description: Validation errors (if any)
+        "400":
+          description: Invalid request or validation errors
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                  valid:
+                    type: boolean
+                    example: false
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  valid:
+                    type: boolean
+                    example: false
 
 components:
   securitySchemes:
@@ -745,6 +1600,14 @@ tags:
     description: Endpoints for managing issuer (company) data
   - name: Stakeholder
     description: Endpoints for managing stakeholders (investors, employees)
+  - name: Stock Class
+    description: Endpoints for managing stock classes
+  - name: Stock Plan
+    description: Endpoints for managing stock plans
+  - name: Valuation
+    description: Endpoints for managing valuations
+  - name: Vesting Terms
+    description: Endpoints for managing vesting terms
   - name: Transactions
     description: Endpoints for creating and managing cap table transactions
   - name: Stats
@@ -753,6 +1616,8 @@ tags:
     description: Endpoints for exporting data in standard formats
   - name: Validation
     description: Endpoints for validating data against OCF standards
+  - name: Manifest
+    description: Endpoints for processing OCF manifests
   - name: Fairmint Integration
     description: Endpoints specifically for integration with Fairmint
 
