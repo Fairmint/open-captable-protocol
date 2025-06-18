@@ -1,29 +1,31 @@
-# Use the official node image as a parent image
+# Use the official Node.js 18 image
 FROM node:18
 
-# Set the working directory
+# Set working directory
 WORKDIR /app
 
-# Copy package files first to leverage Docker cache
+# Define build-time environment to limit esbuild platform downloads
+ENV npm_config_platform=linux
+ENV npm_config_arch=x64
+ENV ESBUILD_BINARY_PATH=node_modules/esbuild/bin/esbuild
+
+# Copy dependency definitions early to leverage Docker cache
 COPY package.json yarn.lock ./
 
-# Debug network connectivity
-# Print Node and Yarn versions for debugging
-RUN node -v && yarn -v
-# List files before install for debugging
-RUN ls -al /app
-# Check network connectivity
+# Install ping for connectivity check (optional for debugging only)
 RUN apt-get update && apt-get install -y iputils-ping
-RUN ping -c 4 registry.yarnpkg.com
 
-# Run yarn install with verbose logging
-RUN yarn install --verbose
+# Run basic connectivity test (can be removed later)
+RUN ping -c 2 registry.yarnpkg.com
 
-# List files after install for debugging
-RUN ls -al /app
+# Install dependencies with caching and better error handling
+RUN yarn install --frozen-lockfile --network-concurrency 5 --no-progress --verbose
 
-# Then copy the rest of the files
+# Copy application source
 COPY . .
 
+# Expose your app port
 EXPOSE 8080
+
+# Default command
 CMD ["yarn", "start"]
