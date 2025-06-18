@@ -10,6 +10,7 @@ jobs:
     name: Build, Test, and Deploy
     environment: dev
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -23,7 +24,7 @@ jobs:
           node-version: "18"
           cache: "yarn"
 
-      - name: Cache Yarn files manually (extra resilience)
+      - name: Cache Yarn files (manual fallback)
         uses: actions/cache@v3
         with:
           path: ~/.cache/yarn
@@ -75,4 +76,52 @@ jobs:
           cp -r . $DEPLOY_DIR/
 
           echo "Syncing files to server..."
-          rsync -az --dele
+          rsync -az --delete \
+            --exclude='node_modules' \
+            --exclude='.git' \
+            --exclude='deploy_key' \
+            --include='chain/out' \
+            --include='chain/out/**' \
+            -e "ssh -i deploy_key -o StrictHostKeyChecking=no" \
+            $DEPLOY_DIR/ \
+            ubuntu@"$HOST":/home/ubuntu/app-${DEPLOY_TIME}
+
+          ssh -i deploy_key -o StrictHostKeyChecking=no ubuntu@"$HOST" "
+            sudo su && \
+            cd /home/ubuntu/app-${DEPLOY_TIME} && \
+            echo 'Building image on host...' && \
+            source ./scripts/docker_container_utils.sh && \
+            docker build -t ocp-dev:${DEPLOY_TIME} -f Dockerfile.dev . && \
+
+            echo 'Cleaning up old resources...' && \
+            docker ps -q --filter 'publish=8081' | xargs -r docker rm -f && \
+            docker ps -q --filter 'publish=8082' | xargs -r docker rm -f && \
+            docker container prune -f && \
+            docker image prune -f && \
+
+            echo 'Starting new container...' && \
+            CONTAINER_NAME=ocp-dev-${DEPLOY_TIME} && \
+            docker run --name \$CONTAINER_NAME -d \
+              --health-cmd='curl -f http://localhost:8080/health || exit 1' \
+              --health-interval='2s' \
+              --health-retries='3' \
+              --health-timeout='5s' \
+              --restart always \
+              -e DOCKER_ENV='true' \
+              -e NODE_ENV='development' \
+              -e SENTRY_DSN='${SENTRY_DSN}' \
+              -e DATABASE_URL='${DATABASE_URL}' \
+              -e RPC_URL='${RPC_URL}' \
+              -e PORT=8080 \
+              -e PRIVATE_KEY='${PRIVATE_KEY}' \
+              -e ETHERSCAN_L2_API_KEY='${ETHERSCAN_L2_API_KEY}' \
+              -v '/home/ubuntu/global-bundle.pem:/global-bundle.pem' \
+              ocp-dev:${DEPLOY_TIME} && \
+
+            wait_for_health \"\$CONTAINER_NAME\" && \
+            if [ \$? -eq 0 ]; then
+              handle_container_switch \"\$CONTAINER_NAME\" \"${DEPLOY_TIME}\" \"dev\"
+            else
+              handle_failed_deployment \"\$CONTAINER_NAME\" \"${DEPLOY_TIME}\" \"dev\"
+            fi
+          "
