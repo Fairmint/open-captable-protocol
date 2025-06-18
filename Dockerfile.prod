@@ -13,6 +13,7 @@ RUN node -v && yarn -v
 # List files before install for debugging
 RUN ls -al /app
 # Check network connectivity
+RUN apt-get update && apt-get install -y iputils-ping
 RUN ping -c 4 registry.yarnpkg.com
 
 # Run yarn install with verbose logging
