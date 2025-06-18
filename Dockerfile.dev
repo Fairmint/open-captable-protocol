@@ -1,15 +1,26 @@
-# Use the official node image as a parent image
+# Use the official Node.js 18 image
 FROM node:18
 
 # Set the working directory
 WORKDIR /app
 
-# Copy package files first to leverage Docker cache
-COPY package.json yarn.lock ./
-RUN yarn install
+# Environment setup to avoid esbuild platform bloat
+ENV npm_config_platform=linux
+ENV npm_config_arch=x64
+ENV ESBUILD_BINARY_PATH=node_modules/esbuild/bin/esbuild
+ENV NODE_ENV=development
 
-# Then copy the rest of the files
+# Copy package files early to leverage Docker cache
+COPY package.json yarn.lock ./
+
+# Install dependencies with verbosity and concurrency limits
+RUN yarn install --frozen-lockfile --network-concurrency 5 --no-progress --verbose
+
+# Copy the full app source
 COPY . .
 
+# Expose dev server port
 EXPOSE 8080
+
+# Start in dev mode
 CMD ["yarn", "dev"]

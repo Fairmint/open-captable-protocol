@@ -4,28 +4,23 @@ FROM node:18
 # Set working directory
 WORKDIR /app
 
-# Define build-time environment to limit esbuild platform downloads
+# Environment variables to avoid platform-specific esbuild bloat
 ENV npm_config_platform=linux
 ENV npm_config_arch=x64
 ENV ESBUILD_BINARY_PATH=node_modules/esbuild/bin/esbuild
+ENV NODE_ENV=production
 
-# Copy dependency definitions early to leverage Docker cache
+# Copy dependency definitions first to leverage Docker cache
 COPY package.json yarn.lock ./
 
-# Install ping for connectivity check (optional for debugging only)
-RUN apt-get update && apt-get install -y iputils-ping
-
-# Run basic connectivity test (can be removed later)
-RUN ping -c 2 registry.yarnpkg.com
-
-# Install dependencies with caching and better error handling
+# Install dependencies with robustness and speed
 RUN yarn install --frozen-lockfile --network-concurrency 5 --no-progress --verbose
 
-# Copy application source
+# Copy app source
 COPY . .
 
-# Expose your app port
+# Expose app port
 EXPOSE 8080
 
-# Default command
+# Run app
 CMD ["yarn", "start"]
