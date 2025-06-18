@@ -6,7 +6,20 @@ WORKDIR /app
 
 # Copy package files first to leverage Docker cache
 COPY package.json yarn.lock ./
-RUN yarn install
+
+# Debug network connectivity
+# Print Node and Yarn versions for debugging
+RUN node -v && yarn -v
+# List files before install for debugging
+RUN ls -al /app
+# Check network connectivity
+RUN ping -c 4 registry.yarnpkg.com
+
+# Run yarn install with verbose logging
+RUN yarn install --verbose
+
+# List files after install for debugging
+RUN ls -al /app
 
 # Then copy the rest of the files
 COPY . .
