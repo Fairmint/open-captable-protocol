@@ -1,1 +1,76 @@
 !.github/workflows/
+
+# Add directories or file patterns to ignore during indexing (e.g. foo/ or *.csv)
+
+# Ignore all files in the node_modules directory
+node_modules/
+
+# Ignore all files in the dist directory
+dist/
+
+# Ignore all files in the build directory
+build/
+
+# Ignore all files in the .git directory
+.git/
+
+# Ignore all files in the .idea directory
+.idea/
+
+# Ignore all files in the .vscode directory
+.vscode/
+
+# Ignore all files in the .cursorignore directory
+.cursorignore/
+
+# Ignore all files in the .serverless directory
+.serverless/
+
+# Ignore all files in the .husky directory
+.husky/
+
+# Ignore all files in the .next directory (Next.js)
+.next/
+
+# Ignore mocks directory
+__mocks__/
+
+# Large files
+*.log
+yarn-error.log
+yarn.lock
+package-lock.json
+
+# Additional common directories to ignore
+coverage/
+.cache/
+.esbuild/
+out/
+
+# Typescript
+*.tsbuildinfo
+
+# Blockchain/Solidity specific
+chain/out/
+chain/cache/
+chain/artifacts/
+chain/forge-cache/
+deployments/
+
+# OCF schemas (if they're large)
+ocf/build/
+
+# GitHub workflows
+.github/
+
+# Generated files
+*.gen.ts
+*.gen.js
+
+# Database files or temporary data
+*.db
+data/
+tmp/
+
+# Test files that might be large
+__snapshots__/
