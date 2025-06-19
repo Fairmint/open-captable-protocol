@@ -19,8 +19,11 @@ RUN yarn install --frozen-lockfile --network-concurrency 5 --no-progress
 # Copy the full app source
 COPY . .
 
+# Build the application
+RUN npx tsx --build src/app.js --outfile dist/app.js
+
 # Expose dev server port
 EXPOSE 8080
 
-# Start in dev mode, overriding the default entrypoint to prevent file watching
-ENTRYPOINT ["sh", "-c", "NODE_ENV=development USE_ENV_FILE=.env.dev npx tsx --no-cache src/app.js"]
+# Start in dev mode, running the built file with node
+ENTRYPOINT ["sh", "-c", "NODE_ENV=development USE_ENV_FILE=.env.dev node dist/app.js"]
