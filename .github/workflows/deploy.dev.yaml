@@ -53,7 +53,7 @@ jobs:
         run: yarn format:check
 
       - name: Build Application
-        run: npx esbuild src/app.js --bundle --platform=node --outfile=dist/app.js
+        run: npx esbuild src/app.js --bundle --platform=node --outfile=dist/app.cjs
 
       - name: Deploy
         shell: bash

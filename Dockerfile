@@ -23,4 +23,4 @@ COPY . .
 EXPOSE 8080
 
 # Run the pre-built application
-CMD ["node", "dist/app.js"]
+CMD ["node", "dist/app.cjs"]
