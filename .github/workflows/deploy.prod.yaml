@@ -52,6 +52,9 @@ jobs:
       - name: Check Formatting
         run: yarn format:check
 
+      - name: Build Application
+        run: npx esbuild src/app.js --bundle --platform=node --format=esm --outfile=dist/app.js
+
       - name: Deploy
         shell: bash
         env:
@@ -91,7 +94,7 @@ jobs:
             cd /home/ubuntu/app-${DEPLOY_TIME} && \
             echo 'Building image on host...' && \
             source ./scripts/docker_container_utils.sh && \
-            docker build -t ocp-prod:${DEPLOY_TIME} -f Dockerfile.prod . && \
+            docker build -t ocp-prod:${DEPLOY_TIME} -f Dockerfile . && \
 
             echo 'Cleaning up old resources...' && \
             docker ps -q --filter 'publish=8081' | xargs -r docker rm -f && \
