@@ -22,5 +22,5 @@ COPY . .
 # Expose dev server port
 EXPOSE 8080
 
-# Start in dev mode, but run the app directly without a file watcher
-CMD ["sh", "-c", "NODE_ENV=development USE_ENV_FILE=.env.dev npx tsx src/app.js"]
+# Start in dev mode, overriding the default entrypoint to prevent file watching
+ENTRYPOINT ["sh", "-c", "NODE_ENV=development USE_ENV_FILE=.env.dev npx tsx src/app.js"]
