@@ -14,7 +14,7 @@ ENV NODE_ENV=development
 COPY package.json yarn.lock ./
 
 # Install dependencies with verbosity and concurrency limits
-RUN yarn install --frozen-lockfile --network-concurrency 5 --no-progress --verbose
+RUN yarn install --frozen-lockfile --network-concurrency 5 --no-progress
 
 # Copy the full app source
 COPY . .
