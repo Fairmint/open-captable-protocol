@@ -106,7 +106,6 @@ jobs:
               --health-interval='2s' \
               --health-retries='3' \
               --health-timeout='5s' \
-              --restart always \
               -e DOCKER_ENV='true' \
               -e NODE_ENV='development' \
               -e SENTRY_DSN='${SENTRY_DSN}' \
