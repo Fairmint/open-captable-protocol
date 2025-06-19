@@ -120,7 +120,7 @@ jobs:
               -v '/home/ubuntu/global-bundle.pem:/global-bundle.pem' \
               ocp-dev:${DEPLOY_TIME} && \
 
-            wait_for_health \"\$CONTAINER_NAME\" && \
+            wait_for_health \"\$CONTAINER_NAME\"
             if [ \$? -eq 0 ]; then
               handle_container_switch \"\$CONTAINER_NAME\" \"${DEPLOY_TIME}\" \"dev\"
             else
