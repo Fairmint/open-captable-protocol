@@ -1,5 +1,3 @@
-!.github/workflows/
-
 # Add directories or file patterns to ignore during indexing (e.g. foo/ or *.csv)
 
 # Ignore all files in the node_modules directory
@@ -61,7 +59,8 @@ deployments/
 ocf/build/
 
 # GitHub workflows
-.github/
+!.github/workflows/
+!.github/workflows/*.yml
 
 # Generated files
 *.gen.ts

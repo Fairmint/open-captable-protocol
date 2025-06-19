@@ -14,18 +14,18 @@ wait_for_health() {
     local timeout_duration=30
     local start_time=$(date +%s)
     local end_time=$((start_time + timeout_duration))
-    
+
     echo "Waiting for container to be healthy..."
     while (( $(date +%s) < end_time )); do
         local status=$(check_health "$container_name")
         echo "Container health status: [$status]"
-        
+
         if [[ "$status" = "healthy" ]]; then
             return 0
         fi
         sleep 2
     done
-    
+
     return 1
 }
 
@@ -39,7 +39,7 @@ handle_container_switch() {
     # Get current container config
     local config=$(docker inspect "$container_name" --format='{{range .Config.Env}} -e {{.}}{{end}}')
     local image=$(docker inspect "$container_name" --format='{{.Config.Image}}')
-    
+
     # Create new container but don't start it yet
     echo "Creating final container..."
     docker create \
@@ -53,7 +53,7 @@ handle_container_switch() {
         $config \
         -v '/home/ubuntu/global-bundle.pem:/global-bundle.pem' \
         $image
-    
+
     # Atomic switch: stop old container and start new one as quickly as possible
     echo "Performing atomic switch..."
     (
@@ -63,21 +63,21 @@ handle_container_switch() {
         docker rename ocp-${environment}-final ocp-${environment}
         docker start ocp-${environment}
     ) & # Run in background
-    
+
     # Wait for background process
     wait $!
-    
+
     # Verify new container is running
     if ! docker ps --filter "name=ocp-${environment}" --filter "status=running" | grep -q ocp-${environment}; then
         echo "Switch failed, rolling back..."
         return 1
     fi
-    
+
 
     # Stop and remove the old container
     docker stop "$container_name"
     docker rm "$container_name"
-    
+
     echo 'Performing final cleanup...'
     # Force remove old images
     docker image ls "ocp-${environment}:*" --format '{{.ID}}' | tail -n +3 | xargs -r docker image rm -f
@@ -85,7 +85,7 @@ handle_container_switch() {
     docker system prune -af --volumes
     # Tag the current image as latest
     docker tag "ocp-${environment}:${deploy_time}" ocp-${environment}:latest
-    
+
     echo 'Deployment successful!'
     cd /home/ubuntu && rm -rf "app-${deploy_time}"
     return 0
@@ -97,6 +97,8 @@ handle_failed_deployment() {
     local deploy_time="$2"
     local environment="$3"
     echo 'New container failed health check, rolling back...'
+    echo "Dumping logs for container: $container_name"
+    docker logs "$container_name"
     docker stop "$container_name"
     docker rm "$container_name"
     docker image rm "ocp-${environment}:${deploy_time}"

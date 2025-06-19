@@ -103,6 +103,11 @@ app.use("/manifest", manifestRoutes);
 // transactions
 app.use("/transactions/", contractMiddleware, transactionRoutes);
 
+// Health check endpoint
+app.get("/health", (req, res) => {
+    res.status(200).send("OK");
+});
+
 const startServer = async () => {
     // Connect to MongoDB
     await connectDB();

@@ -33,7 +33,7 @@ jobs:
             ${{ runner.os }}-yarn-
 
       - name: Install Node Dependencies
-        run: yarn install --frozen-lockfile --network-concurrency 5 --no-progress --verbose
+        run: yarn install --frozen-lockfile --network-concurrency 5 --no-progress
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
@@ -51,6 +51,9 @@ jobs:
 
       - name: Check Formatting
         run: yarn format:check
+
+      - name: Build Application
+        run: npx esbuild src/app.js --bundle --platform=node --outfile=dist/app.cjs
 
       - name: Deploy
         shell: bash
@@ -91,7 +94,7 @@ jobs:
             cd /home/ubuntu/app-${DEPLOY_TIME} && \
             echo 'Building image on host...' && \
             source ./scripts/docker_container_utils.sh && \
-            docker build -t ocp-prod:${DEPLOY_TIME} -f Dockerfile.prod . && \
+            docker build -t ocp-prod:${DEPLOY_TIME} -f Dockerfile . && \
 
             echo 'Cleaning up old resources...' && \
             docker ps -q --filter 'publish=8081' | xargs -r docker rm -f && \
@@ -106,7 +109,6 @@ jobs:
               --health-interval='2s' \
               --health-retries='3' \
               --health-timeout='5s' \
-              --restart always \
               -e DOCKER_ENV='true' \
               -e NODE_ENV='production' \
               -e SENTRY_DSN='${SENTRY_DSN}' \
@@ -118,7 +120,7 @@ jobs:
               -v '/home/ubuntu/global-bundle.pem:/global-bundle.pem' \
               ocp-prod:${DEPLOY_TIME} && \
 
-            wait_for_health \"\$CONTAINER_NAME\" && \
+            wait_for_health \"\$CONTAINER_NAME\"
             if [ \$? -eq 0 ]; then
               handle_container_switch \"\$CONTAINER_NAME\" \"${DEPLOY_TIME}\" \"prod\"
             else
