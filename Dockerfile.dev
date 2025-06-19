@@ -20,7 +20,7 @@ RUN yarn install --frozen-lockfile --network-concurrency 5 --no-progress
 COPY . .
 
 # Build the application
-RUN npx tsx --build src/app.js --outfile dist/app.js
+RUN npx esbuild src/app.js --bundle --platform=node --format=esm --outfile=dist/app.js
 
 # Expose dev server port
 EXPOSE 8080
