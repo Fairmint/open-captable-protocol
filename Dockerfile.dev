@@ -23,4 +23,4 @@ COPY . .
 EXPOSE 8080
 
 # Start in dev mode, overriding the default entrypoint to prevent file watching
-ENTRYPOINT ["sh", "-c", "NODE_ENV=development USE_ENV_FILE=.env.dev npx tsx src/app.js"]
+ENTRYPOINT ["sh", "-c", "NODE_ENV=development USE_ENV_FILE=.env.dev npx tsx --no-cache src/app.js"]
