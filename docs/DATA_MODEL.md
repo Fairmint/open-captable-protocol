@@ -165,15 +165,251 @@ Records issuance of stock to stakeholders.
 }
 ```
 
-Other transaction types include:
-- EquityCompensationIssuance
-- ConvertibleIssuance
-- WarrantIssuance
-- StockTransfer
-- StockCancellation
-- StockConsolidation
-- EquityCompensationExercise
-- And many others (acceptance, adjustment, conversion, release, repurchase, return_to_pool, split, etc.)
+#### ConvertibleAcceptance
+Records the acceptance of a convertible security by a stakeholder.
+
+```javascript
+{
+  _id: String (UUID),
+  object_type: "TX_CONVERTIBLE_ACCEPTANCE",
+  comments: [String],
+  security_id: String,
+  date: String,
+  issuer: String // Reference to Issuer._id
+}
+```
+
+#### EquityCompensationAcceptance
+Records the acceptance of equity compensation by a stakeholder. The `object_type` can be either `TX_PLAN_SECURITY_ACCEPTANCE` or `TX_EQUITY_COMPENSATION_ACCEPTANCE`.
+
+```javascript
+{
+  _id: String (UUID),
+  object_type: ["TX_PLAN_SECURITY_ACCEPTANCE", "TX_EQUITY_COMPENSATION_ACCEPTANCE"],
+  comments: [String],
+  security_id: String,
+  date: String,
+  issuer: String // Reference to Issuer._id
+}
+```
+
+#### PlanSecurityAcceptance
+Records the acceptance of a plan security by a stakeholder.
+
+```javascript
+{
+  _id: String (UUID),
+  object_type: "TX_PLAN_SECURITY_ACCEPTANCE",
+  comments: [String],
+  security_id: String,
+  date: String,
+  issuer: String // Reference to Issuer._id
+}
+```
+
+#### StockAcceptance
+Records the acceptance of a stock by a stakeholder.
+
+```javascript
+{
+  _id: String (UUID),
+  object_type: "TX_STOCK_ACCEPTANCE",
+  comments: [String],
+  security_id: String,
+  date: String,
+  issuer: String // Reference to Issuer._id
+}
+```
+
+#### WarrantAcceptance
+Records the acceptance of a warrant by a stakeholder.
+
+```javascript
+{
+  _id: String (UUID),
+  object_type: "TX_WARRANT_ACCEPTANCE",
+  comments: [String],
+  security_id: String,
+  date: String,
+  issuer: String // Reference to Issuer._id
+}
+```
+
+#### IssuerAuthorizedSharesAdjustment
+Records an adjustment to the number of authorized shares for the issuer.
+
+```javascript
+{
+  _id: String (UUID),
+  object_type: "TX_ISSUER_AUTHORIZED_SHARES_ADJUSTMENT",
+  comments: [String],
+  date: String,
+  issuer_id: String,
+  new_shares_authorized: String,
+  board_approval_date: String,
+  stockholder_approval_date: String,
+  is_onchain_synced: Boolean,
+  issuer: String, // Reference to Issuer._id
+  tx_hash: String
+}
+```
+
+#### StockClassAuthorizedSharesAdjustment
+Records an adjustment to the number of authorized shares for a specific stock class.
+
+```javascript
+{
+  _id: String (UUID),
+  object_type: "TX_STOCK_CLASS_AUTHORIZED_SHARES_ADJUSTMENT",
+  comments: [String],
+  date: String,
+  stock_class_id: String,
+  new_shares_authorized: String,
+  board_approval_date: String,
+  stockholder_approval_date: String,
+  is_onchain_synced: Boolean,
+  issuer: String, // Reference to Issuer._id
+  tx_hash: String
+}
+```
+
+#### StockClassConversionRatioAdjustment
+Records an adjustment to the conversion ratio of a stock class.
+
+```javascript
+{
+  _id: String (UUID),
+  object_type: "TX_STOCK_CLASS_CONVERSION_RATIO_ADJUSTMENT",
+  comments: [String],
+  date: String,
+  stock_class_id: String,
+  new_ratio_conversion_mechanism: Object,
+  issuer: String // Reference to Issuer._id
+}
+```
+
+#### StockPlanPoolAdjustment
+Records an adjustment to the pool of shares reserved for a stock plan.
+
+```javascript
+{
+  _id: String (UUID),
+  object_type: "TX_STOCK_PLAN_POOL_ADJUSTMENT",
+  comments: [String],
+  date: String,
+  stock_plan_id: String,
+  board_approval_date: String,
+  stockholder_approval_date: String,
+  shares_reserved: String,
+  is_onchain_synced: Boolean,
+  issuer: String, // Reference to Issuer._id
+  tx_hash: String
+}
+```
+
+#### ConvertibleCancellation
+Records the cancellation of a convertible security.
+
+```javascript
+{
+  _id: String (UUID),
+  object_type: "TX_CONVERTIBLE_CANCELLATION",
+  amount: Object,
+  comments: [String],
+  security_id: String,
+  date: String,
+  balance_security_id: String,
+  reason_text: String,
+  issuer: String // Reference to Issuer._id
+}
+```
+
+#### EquityCompensationCancellation
+Records the cancellation of equity compensation. The `object_type` can be either `TX_PLAN_SECURITY_CANCELLATION` or `TX_EQUITY_COMPENSATION_CANCELLATION`.
+
+```javascript
+{
+  _id: String (UUID),
+  object_type: ["TX_PLAN_SECURITY_CANCELLATION", "TX_EQUITY_COMPENSATION_CANCELLATION"],
+  quantity: String,
+  comments: [String],
+  security_id: String,
+  date: String,
+  balance_security_id: String,
+  reason_text: String,
+  issuer: String // Reference to Issuer._id
+}
+```
+
+#### PlanSecurityCancellation
+Records the cancellation of a plan security.
+
+```javascript
+{
+  _id: String (UUID),
+  object_type: "TX_PLAN_SECURITY_CANCELLATION",
+  comments: [String],
+  security_id: String,
+  date: String,
+  quantity: String,
+  balance_security_id: String,
+  reason_text: String,
+  issuer: String // Reference to Issuer._id
+}
+```
+
+#### StockCancellation
+Records the cancellation of a stock.
+
+```javascript
+{
+  _id: String (UUID),
+  object_type: "TX_STOCK_CANCELLATION",
+  quantity: String,
+  comments: [String],
+  security_id: String,
+  date: String,
+  balance_security_id: String,
+  reason_text: String,
+  issuer: String, // Reference to Issuer._id
+  tx_hash: String
+}
+```
+
+#### WarrantCancellation
+Records the cancellation of a warrant.
+
+```javascript
+{
+  _id: String (UUID),
+  object_type: "TX_WARRANT_CANCELLATION",
+  quantity: String,
+  comments: [String],
+  security_id: String,
+  date: String,
+  balance_security_id: String,
+  reason_text: String,
+  issuer: String // Reference to Issuer._id
+}
+```
+
+#### StockConsolidation
+Records the consolidation of multiple stock securities into a single resulting security.
+
+```javascript
+{
+  _id: String (UUID),
+  object_type: "TX_STOCK_CONSOLIDATION",
+  security_ids: [String],
+  resulting_security_id: String,
+  comments: [String],
+  date: String,
+  reason_text: String,
+  issuer: String, // Reference to Issuer._id
+  is_onchain_synced: Boolean,
+  tx_hash: String
+}
+```
 
 ### MongoDB Relationships
 
@@ -200,7 +436,7 @@ struct Storage {
     mapping(bytes32 => bytes32) roleAdmin; // hierarchy of roles
     address currentAdmin; // Current admin address
     address pendingAdmin; // Pending admin address for ownership transfer
-    
+
     // Cap Table storage
     Issuer issuer;
     bytes16[] stakeholders;
@@ -307,13 +543,82 @@ struct IssueStockParams {
 }
 ```
 
-Similar parameter structs exist for other transaction types like:
-- IssueConvertibleParams
-- IssueEquityCompensationParams
-- IssueWarrantParams
-- StockConsolidationTx
-- StockTransferTx
-- StockCancellationTx
+#### IssueConvertibleParams
+```solidity
+struct IssueConvertibleParams {
+    bytes16 id;
+    bytes16 stakeholder_id;
+    uint256 investment_amount;
+    bytes16 security_id;
+    string convertible_type;
+    uint256 seniority;
+    string custom_id;
+    string security_law_exemptions_mapping;
+    string conversion_triggers_mapping;
+}
+```
+
+#### IssueEquityCompensationParams
+```solidity
+struct IssueEquityCompensationParams {
+    bytes16 id;
+    bytes16 stakeholder_id;
+    bytes16 stock_class_id;
+    bytes16 stock_plan_id;
+    uint256 quantity;
+    bytes16 security_id;
+    string compensation_type;
+    uint256 exercise_price;
+    uint256 base_price;
+    string expiration_date;
+    string custom_id;
+    string termination_exercise_windows_mapping;
+    string security_law_exemptions_mapping;
+}
+```
+
+#### IssueWarrantParams
+```solidity
+struct IssueWarrantParams {
+    bytes16 id;
+    bytes16 stakeholder_id;
+    uint256 quantity;
+    bytes16 security_id;
+    uint256 purchase_price;
+    string custom_id;
+    string security_law_exemptions_mapping;
+    string exercise_triggers_mapping;
+}
+```
+
+#### StockConsolidationTx
+```solidity
+struct StockConsolidationTx {
+    bytes16[] security_ids;
+    bytes16 resulting_security_id;
+}
+```
+
+#### StockTransferTx
+```solidity
+struct StockTransferTx {
+    bytes16 consolidated_security_id;
+    bytes16 transferee_security_id;
+    bytes16 remainder_security_id;
+    uint256 quantity;
+    uint256 share_price;
+}
+```
+
+#### StockCancellationTx
+```solidity
+struct StockCancellationTx {
+    bytes16 id;
+    bytes16 security_id;
+    bytes16 balance_security_id;
+    uint256 quantity;
+}
+```
 
 ### Diamond Pattern Implementation
 
