@@ -2,6 +2,9 @@
 
 > A comprehensive solution for managing capitalization tables on the blockchain. Implements the Open Cap Table Coalition (OCF) standard, providing secure, transparent, and standardized equity ownership management across multiple EVM-compatible chains.
 
+**For project overview, setup, and usage, see [README.md](README.md).**
+**For development workflow, testing, and code standards, see [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md).**
+
 ## Key Technical Details
 
 - **Framework**: Express.js (Node.js) + TypeScript
@@ -39,53 +42,16 @@
 
 ## File Structure Overview
 
-```
-open-captable-protocol/
-├── chain/                    # Smart contracts (Solidity/Foundry)
-│   ├── src/
-│   │   ├── facets/          # Diamond pattern facets
-│   │   ├── libraries/       # Shared libraries (Storage, AccessControl, etc.)
-│   │   ├── core/            # Core contracts (CapTable, Factory)
-│   │   └── interfaces/      # Contract interfaces
-│   ├── test/                 # Foundry tests
-│   └── script/              # Deployment scripts
-│
-├── src/                      # API server (Node.js/TypeScript)
-│   ├── app.js               # Express app entry point
-│   ├── routes/              # API route handlers
-│   │   ├── issuer.js
-│   │   ├── stakeholder/
-│   │   ├── stockClass.js
-│   │   ├── transactions/
-│   │   └── ...
-│   ├── controllers/         # Business logic controllers
-│   │   ├── issuerController.js
-│   │   ├── stakeholderController.js
-│   │   └── ...
-│   ├── db/                  # MongoDB models and operations
-│   │   ├── objects/         # Mongoose models
-│   │   ├── operations/      # CRUD operations (create, read, update, delete)
-│   │   └── config/          # Database configuration
-│   ├── chain-operations/    # Blockchain interaction utilities
-│   │   ├── deployCapTable.js
-│   │   └── getContractInstances.js
-│   ├── utils/               # Utility functions
-│   │   ├── chains.js        # Chain configuration
-│   │   ├── convertUUID.js   # UUID ↔ bytes16 conversion
-│   │   ├── websocket.ts     # Event listener management
-│   │   └── ...
-│   ├── fairmint/            # Fairmint integration
-│   ├── tests/               # Test files
-│   └── examples/             # Example scripts
-│
-├── docs/                     # Documentation
-│   ├── DATA_MODEL.md         # Data model documentation
-│   ├── DIAMOND_PATTERN.md    # Diamond pattern explanation
-│   ├── DATA_REFLECTION.md    # Fairmint integration
-│   └── openapi.yaml          # OpenAPI specification
-│
-└── scripts/                  # Deployment and utility scripts
-```
+See [README.md](README.md) for complete project structure. Key directories:
+
+- `chain/` - Smart contracts (Diamond pattern with facets)
+- `src/` - API server (Express.js + MongoDB)
+  - `routes/` - API route handlers
+  - `controllers/` - Business logic
+  - `db/` - MongoDB models and operations
+  - `chain-operations/` - Blockchain interaction utilities
+  - `utils/` - Utility functions
+- `docs/` - Documentation (DATA_MODEL.md, DIAMOND_PATTERN.md, etc.)
 
 ## ADR Quick Reference
 
@@ -235,58 +201,39 @@ See `docs/openapi.yaml` for complete API specification.
 
 ## Testing
 
-### Smart Contract Tests
-- Location: `chain/test/`
-- Framework: Foundry (Forge)
-- Run: `yarn test:chain` or `cd chain && forge test`
-- Base: `DiamondTestBase` provides common setup
+See [TESTING.md](TESTING.md) for complete testing guidelines.
 
-### API Tests
-- Location: `src/tests/`
-- Framework: Jest
-- Run: `yarn test:js`
-- Integration: `yarn test-js-integration`
-- Uses separate test database: `DATABASE_OVERRIDE=jest-integration`
-
-See `TESTING.md` for detailed testing guidelines.
+- Smart contracts: `chain/test/` (Foundry/Forge) - Run: `yarn test:chain`
+- API: `src/tests/` (Jest) - Run: `yarn test:js`
+- Test database: `DATABASE_OVERRIDE=jest-integration`
 
 ## Environment Configuration
 
-### Required Variables
-- `DATABASE_URL` - MongoDB connection string
-- `RPC_URL` - Blockchain RPC endpoint
-- `CHAIN_ID` - Target chain ID (31337=Anvil, 84532=Base Sepolia, 8453=Base Mainnet)
-- `PRIVATE_KEY` - Deployer private key
-- `PORT` - Server port (default: 8293)
+See [CONFIG.md](CONFIG.md) for complete configuration details.
 
-### Environment Files
-- `.env.local` - Local development (Anvil)
-- `.env.dev` - Testnet deployment
-- `.env.prod` - Production deployment
-
-See `CONFIG.md` for complete configuration details.
+Required: `DATABASE_URL`, `RPC_URL`, `CHAIN_ID`, `PRIVATE_KEY`, `PORT`
+Environment files: `.env.local`, `.env.dev`, `.env.prod`
 
 ## Development Workflow
 
-1. **Start services**: Anvil, MongoDB (Docker), API server
-2. **Deploy contracts**: `yarn deploy:local`
-3. **Update `.env.local`** with contract addresses
-4. **Run tests**: `yarn test:chain && yarn test:js`
-5. **Create PR**: Follow conventional commits
-
-See `DEVELOPER_GUIDE.md` for complete workflow.
+See [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for complete development workflow, setup instructions, and common tasks.
 
 ## Documentation Links
 
-- [README](README.md) - Project overview and quick start
-- [Developer Guide](DEVELOPER_GUIDE.md) - Complete development guide
-- [Deployment Guide](DEPLOYMENT.md) - Deployment procedures
-- [Testing Guide](TESTING.md) - Testing practices
-- [Configuration Guide](CONFIG.md) - Environment configuration
-- [Data Model](docs/DATA_MODEL.md) - Database schema
-- [Diamond Pattern](docs/DIAMOND_PATTERN.md) - Smart contract architecture
-- [OpenAPI Spec](docs/openapi.yaml) - API specification
-- [Contributing](CONTRIBUTING.md) - Contribution guidelines
+**Human-focused documentation:**
+- [README.md](README.md) - Project overview, setup, and usage
+- [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) - Complete development guide
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Deployment procedures
+- [TESTING.md](TESTING.md) - Testing practices
+- [API.md](API.md) - API reference and examples
+- [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture overview
+- [CONFIG.md](CONFIG.md) - Environment configuration
+
+**Technical documentation:**
+- [docs/DATA_MODEL.md](docs/DATA_MODEL.md) - Database schema
+- [docs/DIAMOND_PATTERN.md](docs/DIAMOND_PATTERN.md) - Smart contract architecture
+- [docs/openapi.yaml](docs/openapi.yaml) - API specification
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Contribution guidelines
 
 ## Important Notes
 
@@ -301,22 +248,8 @@ See `DEVELOPER_GUIDE.md` for complete workflow.
 
 ## Common Tasks
 
-### Adding a New API Endpoint
-1. Create route handler in `src/routes/`
-2. Create controller in `src/controllers/`
-3. Add route to `src/app.js` with appropriate middleware
-4. Update `docs/openapi.yaml`
-5. Add tests in `src/tests/`
-
-### Adding a New Smart Contract Facet
-1. Create facet contract in `chain/src/facets/`
-2. Define storage in `chain/src/libraries/Storage.sol`
-3. Add deployment script in `chain/script/`
-4. Update factory if needed
-5. Add tests in `chain/test/`
-
-### Adding Support for a New Chain
-1. Add chain config in `src/utils/chains.js`
-2. Add RPC URL to environment files
-3. Deploy contracts to new chain
-4. Update documentation
+See [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for detailed common tasks including:
+- Adding new API endpoints
+- Adding new smart contract facets
+- Adding support for new chains
+- And more...
