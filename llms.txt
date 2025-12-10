@@ -1,0 +1,322 @@
+# Open Cap Table Protocol (OCP)
+
+> A comprehensive solution for managing capitalization tables on the blockchain. Implements the Open Cap Table Coalition (OCF) standard, providing secure, transparent, and standardized equity ownership management across multiple EVM-compatible chains.
+
+## Key Technical Details
+
+- **Framework**: Express.js (Node.js) + TypeScript
+- **Database**: MongoDB (Mongoose ODM)
+- **Blockchain**: Solidity (Foundry) with Diamond pattern architecture
+- **Runtime**: Node.js v22+ with ES modules
+- **Package Manager**: Yarn 4
+- **Testing**: Jest (API) + Forge (Smart Contracts)
+- **Validation**: OCF JSON Schema validation (AJV)
+
+## Architecture Patterns
+
+### Dual-Layer Architecture
+- **Smart Contract Layer (Chain)**: Diamond pattern with facets for on-chain cap table data
+- **API Server Layer (Web)**: Express.js REST API with MongoDB for off-chain data
+- **Event Synchronization**: WebSocket listeners sync blockchain events to MongoDB
+
+### Diamond Pattern
+- **Diamond Contract**: Main entry point delegating to facets
+- **Facets**: Modular implementation contracts (Issuer, Stakeholder, StockClass, StockPlan, etc.)
+- **Shared Storage**: Single storage structure accessible by all facets
+- See `docs/DIAMOND_PATTERN.md` for details
+
+### Multi-Chain Support
+- Chain-agnostic design supporting multiple EVM networks
+- Chain configuration in `src/utils/chains.js`
+- Contract instances cached per chain+issuer combination
+- WebSocket listeners grouped by chain ID
+
+### Data Flow
+1. API Request → Express routes → Controllers
+2. Controllers → Database (MongoDB) + Chain operations (Smart contracts)
+3. Chain Events → WebSocket listeners → Database updates
+4. Response → OCF-compliant JSON
+
+## File Structure Overview
+
+```
+open-captable-protocol/
+├── chain/                    # Smart contracts (Solidity/Foundry)
+│   ├── src/
+│   │   ├── facets/          # Diamond pattern facets
+│   │   ├── libraries/       # Shared libraries (Storage, AccessControl, etc.)
+│   │   ├── core/            # Core contracts (CapTable, Factory)
+│   │   └── interfaces/      # Contract interfaces
+│   ├── test/                 # Foundry tests
+│   └── script/              # Deployment scripts
+│
+├── src/                      # API server (Node.js/TypeScript)
+│   ├── app.js               # Express app entry point
+│   ├── routes/              # API route handlers
+│   │   ├── issuer.js
+│   │   ├── stakeholder/
+│   │   ├── stockClass.js
+│   │   ├── transactions/
+│   │   └── ...
+│   ├── controllers/         # Business logic controllers
+│   │   ├── issuerController.js
+│   │   ├── stakeholderController.js
+│   │   └── ...
+│   ├── db/                  # MongoDB models and operations
+│   │   ├── objects/         # Mongoose models
+│   │   ├── operations/      # CRUD operations (create, read, update, delete)
+│   │   └── config/          # Database configuration
+│   ├── chain-operations/    # Blockchain interaction utilities
+│   │   ├── deployCapTable.js
+│   │   └── getContractInstances.js
+│   ├── utils/               # Utility functions
+│   │   ├── chains.js        # Chain configuration
+│   │   ├── convertUUID.js   # UUID ↔ bytes16 conversion
+│   │   ├── websocket.ts     # Event listener management
+│   │   └── ...
+│   ├── fairmint/            # Fairmint integration
+│   ├── tests/               # Test files
+│   └── examples/             # Example scripts
+│
+├── docs/                     # Documentation
+│   ├── DATA_MODEL.md         # Data model documentation
+│   ├── DIAMOND_PATTERN.md    # Diamond pattern explanation
+│   ├── DATA_REFLECTION.md    # Fairmint integration
+│   └── openapi.yaml          # OpenAPI specification
+│
+└── scripts/                  # Deployment and utility scripts
+```
+
+## ADR Quick Reference
+
+| ADR | Decision | What This Means for Development |
+|-----|----------|--------------------------------|
+| N/A | Diamond Pattern | **All smart contracts use Diamond pattern**. New facets must follow existing facet structure. |
+| N/A | OCF Standard | **All data must validate against OCF schemas**. Use `validateInputAgainstOCF()` before saving. |
+| N/A | Multi-Chain | **Always pass `chain_id` for issuer creation**. Use `getChainConfig()` for chain-specific operations. |
+| N/A | Event Sync | **WebSocket listeners auto-sync events**. Don't manually sync - listeners handle it. |
+
+## Code Patterns (Do / Don't)
+
+### UUID Conversion
+```javascript
+// ✅ DO: Convert UUIDs to bytes16 for contract calls
+import { convertUUIDToBytes16 } from "../utils/convertUUID.js";
+const bytes16 = convertUUIDToBytes16(uuid);
+
+// ❌ DON'T: Pass UUID strings directly to contracts
+await contract.createStakeholder(uuid); // Wrong!
+```
+
+### Fixed-Point Decimals
+```javascript
+// ✅ DO: Use scaled BigNumber for contract calls
+import { toScaledBigNumber } from "../utils/convertToFixedPointDecimals.js";
+const quantity = toScaledBigNumber("1000.50"); // Returns BigNumber
+
+// ❌ DON'T: Pass decimal strings directly
+await contract.issueStock({ quantity: "1000.50" }); // Wrong!
+```
+
+### Contract Instance Caching
+```javascript
+// ✅ DO: Use contract middleware or cache
+// Middleware automatically caches: req.contract
+// Or use: contractCache[`${chainId}-${issuerId}`]
+
+// ❌ DON'T: Create new contract instances for every call
+const contract = await getContractInstance(address, chainId); // Inefficient if called repeatedly
+```
+
+### OCF Validation
+```javascript
+// ✅ DO: Validate against OCF schema before saving
+import validateInputAgainstOCF from "../utils/validateInputAgainstSchema.js";
+await validateInputAgainstOCF(data, schema);
+
+// ❌ DON'T: Save data without validation
+await createIssuer(data); // Missing validation!
+```
+
+### Error Handling
+```javascript
+// ✅ DO: Use error decoder for contract errors
+import { decodeError } from "../utils/errorDecoder.js";
+try {
+    await contract.issueStock(params);
+} catch (error) {
+    const decoded = decodeError(error);
+    console.log(decoded.name, decoded.args);
+}
+
+// ❌ DON'T: Log raw errors without decoding
+catch (error) {
+    console.log(error); // Not helpful!
+}
+```
+
+### Chain Configuration
+```javascript
+// ✅ DO: Use getChainConfig for chain-specific operations
+import { getChainConfig } from "../utils/chains.js";
+const config = getChainConfig(chainId);
+const provider = new ethers.JsonRpcProvider(config.rpcUrl);
+
+// ❌ DON'T: Hardcode RPC URLs
+const provider = new ethers.JsonRpcProvider("http://localhost:8545"); // Wrong!
+```
+
+### Database Operations
+```javascript
+// ✅ DO: Use atomic save operations
+import { save } from "../db/operations/atomic.ts";
+const issuer = await save(new Issuer(issuerData));
+
+// ❌ DON'T: Use model.save() directly (not atomic)
+const issuer = new Issuer(issuerData);
+await issuer.save(); // Not atomic!
+```
+
+## API Endpoints
+
+### Core Entities
+
+| Method | Path | Purpose | Middleware |
+|--------|------|---------|------------|
+| POST | `/issuer/create` | Create new issuer and deploy cap table | `chainMiddleware` |
+| GET | `/issuer/id/:id` | Get issuer by ID | None |
+| POST | `/stakeholder/create` | Create stakeholder on-chain | `contractMiddleware` |
+| POST | `/stock-class/create` | Create stock class | `contractMiddleware` |
+| POST | `/stock-plan/create` | Create stock plan | `contractMiddleware` |
+
+### Transactions
+
+| Method | Path | Purpose | Middleware |
+|--------|------|---------|------------|
+| POST | `/transactions/issuance` | Issue stock | `contractMiddleware` |
+| POST | `/transactions/transfer` | Transfer stock | `contractMiddleware` |
+| POST | `/transactions/exercise` | Exercise equity compensation | `contractMiddleware` |
+| POST | `/transactions/cancellation` | Cancel stock | `contractMiddleware` |
+
+### Utilities
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/health` | Health check |
+| GET | `/` | API welcome message |
+| POST | `/verify-cap-table` | Verify cap table data |
+| GET | `/stats/*` | Cap table statistics |
+| GET | `/export/*` | Export cap table data |
+| POST | `/ocf/*` | OCF format operations |
+
+See `docs/openapi.yaml` for complete API specification.
+
+## Key Utilities
+
+### UUID Conversion
+- `convertUUIDToBytes16(uuid)` - Convert UUID string to bytes16 for contracts
+- `convertBytes16ToUUID(bytes16)` - Convert bytes16 back to UUID
+
+### Fixed-Point Decimals
+- `toScaledBigNumber(value)` - Convert decimal string to scaled BigNumber
+- Used for all contract calls involving quantities/prices
+
+### Error Decoding
+- `decodeError(error)` - Decode contract revert errors to readable format
+- Returns `{ name, args, message }` structure
+
+### Chain Configuration
+- `getChainConfig(chainId)` - Get RPC/WebSocket URLs for chain
+- `SUPPORTED_CHAINS` - Map of supported chain IDs
+
+### Contract Operations
+- `deployCapTable(issuerIdBytes16, shares, chainId)` - Deploy new cap table
+- `getContractInstance(address, chainId)` - Get contract instance (cached)
+
+## Testing
+
+### Smart Contract Tests
+- Location: `chain/test/`
+- Framework: Foundry (Forge)
+- Run: `yarn test:chain` or `cd chain && forge test`
+- Base: `DiamondTestBase` provides common setup
+
+### API Tests
+- Location: `src/tests/`
+- Framework: Jest
+- Run: `yarn test:js`
+- Integration: `yarn test-js-integration`
+- Uses separate test database: `DATABASE_OVERRIDE=jest-integration`
+
+See `TESTING.md` for detailed testing guidelines.
+
+## Environment Configuration
+
+### Required Variables
+- `DATABASE_URL` - MongoDB connection string
+- `RPC_URL` - Blockchain RPC endpoint
+- `CHAIN_ID` - Target chain ID (31337=Anvil, 84532=Base Sepolia, 8453=Base Mainnet)
+- `PRIVATE_KEY` - Deployer private key
+- `PORT` - Server port (default: 8293)
+
+### Environment Files
+- `.env.local` - Local development (Anvil)
+- `.env.dev` - Testnet deployment
+- `.env.prod` - Production deployment
+
+See `CONFIG.md` for complete configuration details.
+
+## Development Workflow
+
+1. **Start services**: Anvil, MongoDB (Docker), API server
+2. **Deploy contracts**: `yarn deploy:local`
+3. **Update `.env.local`** with contract addresses
+4. **Run tests**: `yarn test:chain && yarn test:js`
+5. **Create PR**: Follow conventional commits
+
+See `DEVELOPER_GUIDE.md` for complete workflow.
+
+## Documentation Links
+
+- [README](README.md) - Project overview and quick start
+- [Developer Guide](DEVELOPER_GUIDE.md) - Complete development guide
+- [Deployment Guide](DEPLOYMENT.md) - Deployment procedures
+- [Testing Guide](TESTING.md) - Testing practices
+- [Configuration Guide](CONFIG.md) - Environment configuration
+- [Data Model](docs/DATA_MODEL.md) - Database schema
+- [Diamond Pattern](docs/DIAMOND_PATTERN.md) - Smart contract architecture
+- [OpenAPI Spec](docs/openapi.yaml) - API specification
+- [Contributing](CONTRIBUTING.md) - Contribution guidelines
+
+## Important Notes
+
+- **Always validate against OCF schemas** before saving data
+- **Use contract middleware** for routes that interact with contracts
+- **WebSocket listeners auto-sync** blockchain events - don't manually sync
+- **Contract instances are cached** - use middleware or cache directly
+- **Multi-chain support** - always pass `chain_id` and use `getChainConfig()`
+- **UUIDs must be converted** to bytes16 for all contract calls
+- **Quantities/prices must be scaled** using `toScaledBigNumber()`
+- **Tests use separate database** - `DATABASE_OVERRIDE=jest-integration`
+
+## Common Tasks
+
+### Adding a New API Endpoint
+1. Create route handler in `src/routes/`
+2. Create controller in `src/controllers/`
+3. Add route to `src/app.js` with appropriate middleware
+4. Update `docs/openapi.yaml`
+5. Add tests in `src/tests/`
+
+### Adding a New Smart Contract Facet
+1. Create facet contract in `chain/src/facets/`
+2. Define storage in `chain/src/libraries/Storage.sol`
+3. Add deployment script in `chain/script/`
+4. Update factory if needed
+5. Add tests in `chain/test/`
+
+### Adding Support for a New Chain
+1. Add chain config in `src/utils/chains.js`
+2. Add RPC URL to environment files
+3. Deploy contracts to new chain
+4. Update documentation
