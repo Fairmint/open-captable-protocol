@@ -9,7 +9,7 @@
 
 - **Framework**: Express.js (Node.js) + TypeScript
 - **Database**: MongoDB (Mongoose ODM)
-- **Blockchain**: Solidity (Foundry) with Diamond pattern architecture
+- **Blockchain**: Solidity (Foundry)
 - **Runtime**: Node.js v22+ with ES modules
 - **Package Manager**: Yarn 4
 - **Testing**: Jest (API) + Forge (Smart Contracts)
@@ -17,32 +17,25 @@
 
 ## Architecture Patterns
 
-### Diamond Pattern
-- **Diamond Contract**: Main entry point delegating to facets
-- **Facets**: Modular implementation contracts (Issuer, Stakeholder, StockClass, StockPlan, etc.)
-- **Shared Storage**: Single storage structure accessible by all facets
-- See `docs/DIAMOND_PATTERN.md` for details
-
 See [ARCHITECTURE.md](ARCHITECTURE.md) for architecture overview.
 
 ## File Structure Overview
 
 See [README.md](README.md) for complete project structure. Key directories:
 
-- `chain/` - Smart contracts (Diamond pattern with facets)
+- `chain/` - Smart contracts
 - `src/` - API server (Express.js + MongoDB)
   - `routes/` - API route handlers
   - `controllers/` - Business logic
   - `db/` - MongoDB models and operations
   - `chain-operations/` - Blockchain interaction utilities
   - `utils/` - Utility functions
-- `docs/` - Documentation (DATA_MODEL.md, DIAMOND_PATTERN.md, etc.)
+- `docs/` - Documentation
 
 ## ADR Quick Reference
 
 | ADR | Decision | What This Means for Development |
 |-----|----------|--------------------------------|
-| N/A | Diamond Pattern | **All smart contracts use Diamond pattern**. New facets must follow existing facet structure. |
 | N/A | OCF Standard | **All data must validate against OCF schemas**. Use `validateInputAgainstOCF()` before saving. |
 | N/A | Multi-Chain | **Always pass `chain_id` for issuer creation**. Use `getChainConfig()` for chain-specific operations. |
 | N/A | Event Sync | **WebSocket listeners auto-sync events**. Don't manually sync - listeners handle it. |
@@ -181,7 +174,6 @@ See [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for complete development workflow, 
 
 **Technical documentation:**
 - [docs/DATA_MODEL.md](docs/DATA_MODEL.md) - Database schema
-- [docs/DIAMOND_PATTERN.md](docs/DIAMOND_PATTERN.md) - Smart contract architecture
 - [docs/openapi.yaml](docs/openapi.yaml) - API specification
 - [CONTRIBUTING.md](CONTRIBUTING.md) - Contribution guidelines
 

@@ -134,7 +134,7 @@ yarn test:js      # API tests
 
 ### Test Setup
 
-Smart contract tests extend `DiamondTestBase` which provides:
+Smart contract tests extend a base test contract which provides:
 
 - Deployed factory and cap table contracts
 - Helper functions for creating stakeholders, stock classes, etc.
@@ -149,7 +149,7 @@ pragma solidity ^0.8.0;
 import "./TestBase.sol";
 import { IStockFacet } from "@interfaces/IStockFacet.sol";
 
-contract MyTest is DiamondTestBase {
+contract MyTest is TestBase {
     function testMyFeature() public {
         // Test code here
     }
@@ -221,7 +221,7 @@ vm.expectCall(address(target), abi.encodeWithSelector(...));
 
 ### Test Helpers
 
-The `DiamondTestBase` contract provides helper functions:
+The base test contract provides helper functions:
 
 ```solidity
 // Create a stakeholder

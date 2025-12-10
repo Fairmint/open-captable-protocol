@@ -74,7 +74,7 @@ Before you begin, ensure you have the following installed:
 open-captable-protocol/
 ├── chain/                    # Smart contracts (Solidity)
 │   ├── src/
-│   │   ├── facets/          # Diamond pattern facets
+│   │   ├── facets/          # Facet contracts
 │   │   ├── libraries/       # Shared libraries
 │   │   ├── core/            # Core contracts
 │   │   └── interfaces/      # Contract interfaces
@@ -90,7 +90,6 @@ open-captable-protocol/
 │   └── examples/            # Example scripts
 ├── docs/                     # Documentation
 │   ├── DATA_MODEL.md        # Data model documentation
-│   ├── DIAMOND_PATTERN.md   # Diamond pattern explanation
 │   └── openapi.yaml         # OpenAPI specification
 ├── scripts/                  # Deployment and utility scripts
 └── .github/                  # GitHub workflows and templates
@@ -124,8 +123,6 @@ PORT=8293
 
 # Contract Addresses (set after deployment)
 FACTORY_ADDRESS=
-REFERENCE_DIAMOND=
-DIAMOND_CUT_FACET=
 ISSUER_FACET=
 # ... other facet addresses
 ```
@@ -190,8 +187,6 @@ mongodb://ocp:ocp@localhost:27017/mongo?authSource=admin&retryWrites=true&w=majo
 ## Architecture Overview
 
 See [ARCHITECTURE.md](./ARCHITECTURE.md) for architecture details.
-
-The smart contracts use the Diamond pattern. See [docs/DIAMOND_PATTERN.md](./docs/DIAMOND_PATTERN.md) for detailed information.
 
 ## Development Workflow
 
@@ -365,11 +360,11 @@ See [TESTING.md](./TESTING.md) for detailed testing guidelines.
 4. **Update OpenAPI spec** in `docs/openapi.yaml` if applicable
 5. **Add tests** in `src/tests/`
 
-### Adding a New Smart Contract Facet
+### Adding a New Smart Contract
 
-1. **Create facet contract** in `chain/src/facets/`
-2. **Define storage** in `chain/src/libraries/Storage.sol`
-3. **Add deployment script** in `chain/script/`
+1. **Create contract** in appropriate directory (`chain/src/core/`, `chain/src/facets/`, etc.)
+2. **Define storage** if needed in `chain/src/core/Storage.sol`
+3. **Add deployment script** in `chain/script/` if needed
 4. **Update factory** if needed
 5. **Add tests** in `chain/test/`
 
@@ -449,7 +444,6 @@ This removes all test data from MongoDB.
 
 - [OpenAPI Specification](./docs/openapi.yaml) - API specification
 - [Data Model Documentation](./docs/DATA_MODEL.md) - Database schema
-- [Diamond Pattern Documentation](./docs/DIAMOND_PATTERN.md) - Smart contract architecture
 - [Configuration Guide](./CONFIG.md) - Environment configuration
 - [Foundry Book](https://book.getfoundry.sh/) - Foundry documentation
 - [OCF Standard](https://github.com/Open-Cap-Table-Coalition/Open-Cap-Format-OCF) - Open Cap Table Format specification
