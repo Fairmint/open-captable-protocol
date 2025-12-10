@@ -17,28 +17,13 @@
 
 ## Architecture Patterns
 
-### Dual-Layer Architecture
-- **Smart Contract Layer (Chain)**: Diamond pattern with facets for on-chain cap table data
-- **API Server Layer (Web)**: Express.js REST API with MongoDB for off-chain data
-- **Event Synchronization**: WebSocket listeners sync blockchain events to MongoDB
-
 ### Diamond Pattern
 - **Diamond Contract**: Main entry point delegating to facets
 - **Facets**: Modular implementation contracts (Issuer, Stakeholder, StockClass, StockPlan, etc.)
 - **Shared Storage**: Single storage structure accessible by all facets
 - See `docs/DIAMOND_PATTERN.md` for details
 
-### Multi-Chain Support
-- Chain-agnostic design supporting multiple EVM networks
-- Chain configuration in `src/utils/chains.js`
-- Contract instances cached per chain+issuer combination
-- WebSocket listeners grouped by chain ID
-
-### Data Flow
-1. API Request → Express routes → Controllers
-2. Controllers → Database (MongoDB) + Chain operations (Smart contracts)
-3. Chain Events → WebSocket listeners → Database updates
-4. Response → OCF-compliant JSON
+See [ARCHITECTURE.md](ARCHITECTURE.md) for architecture overview.
 
 ## File Structure Overview
 
@@ -145,36 +130,6 @@ await issuer.save(); // Not atomic!
 
 ## API Endpoints
 
-### Core Entities
-
-| Method | Path | Purpose | Middleware |
-|--------|------|---------|------------|
-| POST | `/issuer/create` | Create new issuer and deploy cap table | `chainMiddleware` |
-| GET | `/issuer/id/:id` | Get issuer by ID | None |
-| POST | `/stakeholder/create` | Create stakeholder on-chain | `contractMiddleware` |
-| POST | `/stock-class/create` | Create stock class | `contractMiddleware` |
-| POST | `/stock-plan/create` | Create stock plan | `contractMiddleware` |
-
-### Transactions
-
-| Method | Path | Purpose | Middleware |
-|--------|------|---------|------------|
-| POST | `/transactions/issuance` | Issue stock | `contractMiddleware` |
-| POST | `/transactions/transfer` | Transfer stock | `contractMiddleware` |
-| POST | `/transactions/exercise` | Exercise equity compensation | `contractMiddleware` |
-| POST | `/transactions/cancellation` | Cancel stock | `contractMiddleware` |
-
-### Utilities
-
-| Method | Path | Purpose |
-|--------|------|---------|
-| GET | `/health` | Health check |
-| GET | `/` | API welcome message |
-| POST | `/verify-cap-table` | Verify cap table data |
-| GET | `/stats/*` | Cap table statistics |
-| GET | `/export/*` | Export cap table data |
-| POST | `/ocf/*` | OCF format operations |
-
 See `docs/openapi.yaml` for complete API specification.
 
 ## Key Utilities
@@ -211,9 +166,6 @@ See [TESTING.md](TESTING.md) for complete testing guidelines.
 
 See [CONFIG.md](CONFIG.md) for complete configuration details.
 
-Required: `DATABASE_URL`, `RPC_URL`, `CHAIN_ID`, `PRIVATE_KEY`, `PORT`
-Environment files: `.env.local`, `.env.dev`, `.env.prod`
-
 ## Development Workflow
 
 See [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for complete development workflow, setup instructions, and common tasks.
@@ -223,9 +175,7 @@ See [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for complete development workflow, 
 **Human-focused documentation:**
 - [README.md](README.md) - Project overview, setup, and usage
 - [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) - Complete development guide
-- [DEPLOYMENT.md](DEPLOYMENT.md) - Deployment procedures
 - [TESTING.md](TESTING.md) - Testing practices
-- [API.md](API.md) - API reference and examples
 - [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture overview
 - [CONFIG.md](CONFIG.md) - Environment configuration
 
@@ -238,18 +188,10 @@ See [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for complete development workflow, 
 ## Important Notes
 
 - **Always validate against OCF schemas** before saving data
-- **Use contract middleware** for routes that interact with contracts
-- **WebSocket listeners auto-sync** blockchain events - don't manually sync
-- **Contract instances are cached** - use middleware or cache directly
-- **Multi-chain support** - always pass `chain_id` and use `getChainConfig()`
 - **UUIDs must be converted** to bytes16 for all contract calls
 - **Quantities/prices must be scaled** using `toScaledBigNumber()`
 - **Tests use separate database** - `DATABASE_OVERRIDE=jest-integration`
 
 ## Common Tasks
 
-See [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for detailed common tasks including:
-- Adding new API endpoints
-- Adding new smart contract facets
-- Adding support for new chains
-- And more...
+See [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for detailed common tasks.

@@ -63,7 +63,7 @@ Before you begin, ensure you have the following installed:
      ```bash
      docker compose up
      ```
-   - Terminal 4: Start the API server
+   - Terminal 4: Start the server
      ```bash
      yarn dev
      ```
@@ -79,9 +79,9 @@ open-captable-protocol/
 │   │   ├── core/            # Core contracts
 │   │   └── interfaces/      # Contract interfaces
 │   └── script/              # Deployment scripts
-├── src/                      # API server (Node.js/TypeScript)
-│   ├── app.js               # Express app entry point
-│   ├── routes/              # API route handlers
+├── src/                      # Server code (Node.js/TypeScript)
+│   ├── app.js               # Application entry point
+│   ├── routes/              # Route handlers
 │   ├── controllers/         # Business logic controllers
 │   ├── db/                  # MongoDB models and operations
 │   ├── chain-operations/    # Blockchain interaction utilities
@@ -189,40 +189,9 @@ mongodb://ocp:ocp@localhost:27017/mongo?authSource=admin&retryWrites=true&w=majo
 
 ## Architecture Overview
 
-### System Components
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for architecture details.
 
-OCP consists of two main layers:
-
-1. **Smart Contract Layer (Chain)**
-   - Solidity contracts using the Diamond pattern
-   - On-chain cap table data storage
-   - Transaction processing for equity movements
-   - Multi-chain support (Base, Arbitrum, etc.)
-
-2. **API Server (Web)**
-   - Express.js REST API
-   - MongoDB for off-chain data
-   - WebSocket event listeners
-   - OCF standard validation
-
-### Diamond Pattern
-
-The smart contracts use the Diamond pattern for modularity and upgradability:
-
-- **Diamond Contract**: Main entry point that delegates to facets
-- **Facets**: Modular implementation contracts (Issuer, Stakeholder, StockClass, etc.)
-- **Storage**: Shared storage structure accessible by all facets
-
-See [docs/DIAMOND_PATTERN.md](./docs/DIAMOND_PATTERN.md) for detailed information.
-
-### Data Flow
-
-1. **API Request** → Express routes → Controllers
-2. **Controllers** → Database operations (MongoDB) + Chain operations (Smart contracts)
-3. **Chain Events** → WebSocket listeners → Database updates
-4. **Response** → OCF-compliant JSON
-
-See [docs/DATA_MODEL.md](./docs/DATA_MODEL.md) for data model details.
+The smart contracts use the Diamond pattern. See [docs/DIAMOND_PATTERN.md](./docs/DIAMOND_PATTERN.md) for detailed information.
 
 ## Development Workflow
 
@@ -348,7 +317,7 @@ yarn test-js-integration
   }
   ```
 
-**API Tests:**
+**Server Tests:**
 - Located in `src/tests/`
 - Use Jest testing framework
 - Example:
@@ -388,12 +357,12 @@ See [TESTING.md](./TESTING.md) for detailed testing guidelines.
 
 ## Common Tasks
 
-### Adding a New API Endpoint
+### Adding a New Route
 
 1. **Create route handler** in `src/routes/`
 2. **Create controller** in `src/controllers/`
 3. **Add route** to `src/app.js`
-4. **Update OpenAPI spec** in `docs/openapi.yaml`
+4. **Update OpenAPI spec** in `docs/openapi.yaml` if applicable
 5. **Add tests** in `src/tests/`
 
 ### Adding a New Smart Contract Facet
@@ -478,7 +447,7 @@ This removes all test data from MongoDB.
 
 ## Additional Resources
 
-- [OpenAPI Specification](./docs/openapi.yaml) - API documentation
+- [OpenAPI Specification](./docs/openapi.yaml) - API specification
 - [Data Model Documentation](./docs/DATA_MODEL.md) - Database schema
 - [Diamond Pattern Documentation](./docs/DIAMOND_PATTERN.md) - Smart contract architecture
 - [Configuration Guide](./CONFIG.md) - Environment configuration
